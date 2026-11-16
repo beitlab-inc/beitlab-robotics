@@ -14,15 +14,18 @@ make site-serve    # the same, then serve it on http://localhost:8000
 | `site.json` | Site name, optional `repo_url` (adds a GitHub link to the header) and `base_url`, and the docs sidebar order |
 | `_layouts/` | Page shells (`home.html`, `docs.html`) and shared fragments (`head`, `header`, `footer`) |
 | `pages/` | One HTML file per page, each starting with a `<!--meta ... -->` block (title, description, layout, section) |
-| `assets/` | CSS, JS, the favicon and the video stills |
+| `assets/` | CSS, JS, the favicon, the video stills and the two videos (`assets/video/`) |
 
-Pages do not hold copies of renders, PDFs or videos. They name the generated file in the
+The two videos live in `assets/video/` because the product repos are private and CI cannot read
+their `out/` folders. To refresh them, copy the new renders from `Balanced_robot/design/body_v1/out/video/`
+over the files there and update the sizes in `pages/index.html` and `pages/docs/robot/assembly.html`.
+
+Other pages do not hold copies of renders, PDFs or STL files. They name the generated file in the
 sibling product projects, and the build copies it into `build/site/files/`:
 
 - `{{repo:hardware/SUBSYSTEMS.pdf}}` is the URL of that file; `{{size:...}}` is its size.
 - `{{mdtable:design/body_v1/out/options/option_B/hardware_bom.md}}` renders a generated Markdown table.
 - `<!--optional--> ... <!--/optional-->` is left out, with a note, if a file inside it is missing.
-  The videos are wrapped like this.
 - `{{root}}` is the relative path to the site root, so the site works under
   `user.github.io/<repo>/` and on a custom domain.
 
@@ -33,7 +36,7 @@ picks up the new outputs. The board schematic comes from the frozen release
 deliberately publishes no fabrication files (Gerbers, BOM, placement or assembly drawings).
 
 The video stills in `assets/img/` (`hero-robot.jpg`, `promo-poster.jpg`, `assembly-poster.jpg`)
-are cut from the generated videos: refresh them with `python3 tools/site/build_site.py --posters`
+are cut from the videos in `assets/video/`: refresh them with `python3 tools/site/build_site.py --posters`
 (needs opencv).
 
 The homepage scroll is a 60-frame orbit in `assets/orbit/` (`f00.png`–`f59.png`), the same
@@ -59,5 +62,5 @@ manually. Configure repository names and private-repository access as described 
    `https://<domain>` so the canonical links, `sitemap.xml` and the 404 page use it. With an
    Actions deploy no `CNAME` file is needed.
 
-The built site is about 96 MB, mostly the two videos (66 MB) and the STEP models. GitHub Pages
+The built site is about 96 MB, mostly the two videos (64 MB) and the STEP models. GitHub Pages
 allows 1 GB per site and 100 MB per file.

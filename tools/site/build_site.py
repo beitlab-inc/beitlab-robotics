@@ -293,10 +293,10 @@ class Builder:
 
 
 def make_posters() -> None:
-    """Refresh the video stills in site/assets/img from the generated videos (needs opencv)."""
+    """Refresh the video stills in site/assets/img from the videos in site/assets/video (needs opencv)."""
     import cv2
 
-    video = ROBOT_ROOT / "design/body_v1/out/video"
+    video = SITE / "assets" / "video"
     img = SITE / "assets/img"
     jobs = [  # (video, second, crop x0, y0, x1, y1 in 1920x1080, width, output)
         ("beitlab_balance_robot_v1_promo.mp4", 42.0, 360, 30, 1560, 990, 1200, "hero-robot.jpg"),
