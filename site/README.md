@@ -20,8 +20,10 @@ The two videos live in `assets/video/` because the product repos are private and
 their `out/` folders. To refresh them, copy the new renders from `Balanced_robot/design/body_v1/out/video/`
 over the files there and update the sizes in `pages/index.html` and `pages/docs/robot/assembly.html`.
 
-Other pages do not hold copies of renders, PDFs or STL files. They name the generated file in the
-sibling product projects, and the build copies it into `build/site/files/`:
+Product files (renders, PDFs, STL and STEP models, the bill of materials, the book) are copies in
+`site/product/`, with the same paths as in the sibling projects. A local build reads the sibling
+project's generated file when it exists, so it always sees the latest output; otherwise it uses the
+copy. The build puts the file in `build/site/files/`. Pages refer to them like this:
 
 - `{{repo:hardware/SUBSYSTEMS.pdf}}` is the URL of that file; `{{size:...}}` is its size.
 - `{{mdtable:design/body_v1/out/options/option_B/hardware_bom.md}}` renders a generated Markdown table.
@@ -49,10 +51,10 @@ uv run --no-project --with vtk==9.4.2 --with pillow --with numpy python tools/si
 
 ## Publishing
 
-`.github/workflows/pages.yml` checks out the sibling product repositories and deploys
-website changes on `main` or `master`. For product-only changes, run the workflow
-manually. Configure repository names and private-repository access as described in
-[the project README](../README.md).
+`.github/workflows/pages.yml` builds from this repository alone and deploys website changes on
+`main` or `master`. After a product output changes, copy the file into `site/product/` (same path,
+e.g. `cp ../Balanced_robot/design/body_v1/out/options/option_B/hardware_bom.md site/product/design/body_v1/out/options/option_B/`)
+and commit it with the change. The build fails if a copy is missing, so a new reference needs its copy first.
 
 1. In the repository on GitHub, open **Settings → Pages** and set **Source** to **GitHub Actions**.
 2. Push. The site appears at `https://<user>.github.io/<repo>/`.

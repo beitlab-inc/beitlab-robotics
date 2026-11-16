@@ -36,6 +36,17 @@ class AssetPaths(unittest.TestCase):
             self.assertEqual(self.builder.repo_file(rel), owner / rel)
             self.assertTrue(self.builder.repo_file(rel).is_file())
 
+    def test_site_copy_used_when_project_missing(self):
+        saved = site.PRODUCT
+        self.addCleanup(setattr, site, 'PRODUCT', saved)
+        copies = Path(self.temp.name) / 'product'
+        (copies / 'design').mkdir(parents=True)
+        (copies / 'design/only_here.stl').write_text('fixture')
+        site.PRODUCT = copies
+        self.assertEqual(self.builder.repo_file('design/only_here.stl'), copies / 'design/only_here.stl')
+        # The project file wins when both exist.
+        self.assertEqual(self.builder.repo_file('design/model.step'), site.ROBOT_ROOT / 'design/model.step')
+
     def test_escape_and_unknown_prefix_rejected(self):
         for rel in ['/etc/passwd', '../board/hardware/board.pdf',
                     'design/../../board/hardware/board.pdf', 'tools/private.py', '']:

@@ -1,5 +1,6 @@
-# Builds the Beitlab Robotics website (tools/site/build_site.py: site/ plus the generated renders, PDFs and
-# videos it links, link-checked) and publishes it with GitHub Pages.
+# Builds the Beitlab Robotics website (tools/site/build_site.py: site/ with its product files in
+# site/product and videos in site/assets/video, link-checked) and publishes it with GitHub Pages.
+# The product repositories are not read here; refresh site/product when the outputs change.
 # One-time setup: repository Settings -> Pages -> Build and deployment -> Source: "GitHub Actions".
 # Custom domain: Settings -> Pages -> Custom domain (a CNAME file is not used with Actions deploys),
 # then set "base_url" in site/site.json so canonical links, the sitemap and the 404 page use it.
@@ -29,16 +30,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           path: Robotics_landing
-      - uses: actions/checkout@v4
-        with:
-          repository: ${{ vars.ROBOT_REPOSITORY || format('{0}/Balanced_robot', github.repository_owner) }}
-          token: ${{ secrets.WORKSPACE_READ_TOKEN || github.token }}
-          path: Balanced_robot
-      - uses: actions/checkout@v4
-        with:
-          repository: ${{ vars.BOARD_REPOSITORY || format('{0}/Robotics_board', github.repository_owner) }}
-          token: ${{ secrets.WORKSPACE_READ_TOKEN || github.token }}
-          path: Robotics_board
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"

@@ -10,8 +10,9 @@ Sources live in site/:
 Inside a page or layout:
   {{root}}             relative path to the site root ("", "../", "../../"), so the site works
                        both at user.github.io/repo/ and on a custom domain
-  {{repo:PATH}}        copies the repository file PATH into the site (files/PATH) and gives its URL;
-                       renders, PDFs and videos are taken from the generated outputs, never duplicated
+  {{repo:PATH}}        copies the product file PATH into the site (files/PATH) and gives its URL. It is
+                       read from the sibling project, or from site/product/PATH when that project is
+                       not checked out (CI)
   {{size:PATH}}        that file's size, e.g. "4.2 MB"
   {{include:NAME}}     the shared fragment site/_layouts/NAME (header, footer)
   {{mdtable:PATH}}     the first Markdown table in repository file PATH, as HTML (generated lists)
@@ -41,6 +42,9 @@ ROOT = Path(__file__).resolve().parents[2]
 ROBOT_ROOT = Path(os.environ.get("ROBOT_ROOT", ROOT.parent / "Balanced_robot")).resolve()
 BOARD_ROOT = Path(os.environ.get("BOARD_ROOT", ROOT.parent / "Robotics_board")).resolve()
 SITE = ROOT / "site"
+# Copies of the product files the pages link to, for builds without the sibling projects (CI).
+# A file in the sibling project is always used when it exists, so a local build sees fresh outputs.
+PRODUCT = SITE / "product"
 OUT = ROOT / "build" / "site"
 
 META_RE = re.compile(r"\A\s*<!--meta\s*\n(.*?)\n\s*-->\s*\n", re.S)
@@ -109,6 +113,8 @@ class Builder:
         src = (owner / path).resolve()
         if not src.is_relative_to(owner):
             sys.exit(f"Product asset escapes its source project: {rel}")
+        if not src.is_file() and (PRODUCT / path).is_file():
+            return PRODUCT / path
         return src
 
     def copy_repo(self, rel: str) -> str:
