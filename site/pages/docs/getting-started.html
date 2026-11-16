@@ -1,0 +1,158 @@
+<!--meta
+title: First steps: connect to your PC · Beitlab Robotics
+description: Set up your development computer, flash the Milk-V Duo S, log in over USB, then connect to it on the Robotics Board through Ethernet or the J22 serial console.
+layout: docs
+section: docs
+-->
+<p class="kicker"><span class="eyebrow">Start here</span></p>
+<h1>First steps: connect to your PC</h1>
+<p class="lead">Set up the development computer, give the Milk-V Duo S a working image, and open a shell on it. First on its own over USB, then mounted on the Robotics Board.</p>
+<div class="meta-row"><span class="badge">About 45 minutes</span><span class="badge">Linux, macOS or Windows</span><span class="badge wip">Before board bring-up</span></div>
+
+<h2 id="overview">How the pieces connect</h2>
+<p>There are three links to get working, in this order:</p>
+<div class="cards">
+  <div class="card"><span class="tag">Link 1</span><h4>PC ↔ repository</h4><p>Build and test the control core on your PC. No hardware is needed.</p></div>
+  <div class="card"><span class="tag">Link 2</span><h4>PC ↔ Duo S (alone)</h4><p>USB-C networking and SSH, with the Duo S powered from your PC.</p></div>
+  <div class="card"><span class="tag">Link 3</span><h4>PC ↔ Duo S on the board</h4><p>Ethernet or the J22 serial console, with the board powering the Duo S.</p></div>
+</div>
+<div class="callout danger">
+  <span class="title">Never power the Duo S from two sources at once</span>
+  <p>Once the Duo S is on the Robotics Board, the board feeds its VSYS pins. Do not also plug a powered USB-C cable into the Duo S: whether Duo S VSYS and USB VBUS are tied together has not been confirmed, and the two supplies could back-feed each other. Use Ethernet or the serial console instead, as in <a href="#on-the-board">step 4</a>.</p>
+</div>
+
+<h2 id="you-need">What you need</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>Item</th><th>Why</th></tr></thead>
+  <tbody>
+    <tr><td>A PC (Ubuntu 24.04 recommended; macOS and Windows work for SSH)</td><td>Building, flashing, logging in. ROS 2 tools are easiest on Ubuntu.</td></tr>
+    <tr><td>Milk-V Duo S (SG2000), headers pointing up</td><td>The robot's computer. The board was drawn against the V1.2 Duo S.</td></tr>
+    <tr><td>microSD card, 8 GB or larger, and a card reader</td><td>The boot image.</td></tr>
+    <tr><td>USB-C <em>data</em> cable</td><td>Power and networking for the Duo S on its own. Charge-only cables will not work.</td></tr>
+    <tr><td>3.3 V USB-to-UART adapter (CP2102, CH340, FT232…) and a JST-SH 3-pin lead</td><td>The Linux console on the board's J22. It must be 3.3 V logic, not 5 V.</td></tr>
+    <tr><td>Ethernet cable and a router with DHCP (optional)</td><td>Network access once the Duo S is on the board.</td></tr>
+    <tr><td>Current-limited bench supply, 12–16.8 V</td><td>For powering the board in <a href="#on-the-board">step 4</a>. Never a LiPo for first power-on.</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="dev-pc">1. Set up the development computer</h2>
+<p>The control core is plain C11 and builds and tests on your PC with no robot attached. Start here: if these tests fail, nothing on the hardware will be meaningful.</p>
+<pre><code><span class="c"># Ubuntu 24.04: compilers, CMake, Python and the RISC-V cross toolchain</span>
+<span class="p">$ </span>sudo apt install build-essential cmake git python3-pip \
+      gcc-riscv64-unknown-elf picolibc-riscv64-unknown-elf
+
+<span class="c"># Get the repository (use your clone URL), then the pinned host tools</span>
+<span class="p">$ </span>git clone &lt;repository-url&gt; balance-robot &amp;&amp; cd balance-robot
+<span class="p">$ </span>python3 -m pip install -r tools/requirements.txt</code></pre>
+<p>Then run the same checks the CI runs:</p>
+<pre><code><span class="p">$ </span>make test     <span class="c"># host build, unit tests and the closed-loop plant simulation</span>
+<span class="p">$ </span>make asan     <span class="c"># the same with address and undefined-behaviour sanitizers</span>
+<span class="p">$ </span>make cross    <span class="c"># core + SG2000 port for the C906 core (RV64GC)</span></code></pre>
+<p><code>make test</code> runs two programs. <code>balance_tests</code> holds the unit tests. <code>balance_closed_loop</code> drives the real runtime, the 10 kHz drive loop and FOC against a simulated wheel-pendulum built from the robot's CAD mass properties. It must recover from a lean at 14.8 V and 12.2 V and drive at a commanded speed.</p>
+<div class="callout"><span class="title">Note</span><p>Passing host tests shows that signs, units, frames and limits are consistent end to end. It does not prove that the physical robot is stable: that needs measured motors and mass properties.</p></div>
+
+<h2 id="flash">2. Prepare the Duo S</h2>
+<ol class="steps">
+  <li><strong>Download the official image</strong>Use Milk-V's Buildroot <em>SDK V2</em> images, which support the Duo S's ARM core: <a href="https://github.com/milkv-duo/duo-buildroot-sdk-v2/releases/">duo-buildroot-sdk-v2 releases</a>. Pick the <strong>Duo S, ARM64, SD card</strong> image. Use firmware V1.1.2 or later: older images use RNDIS instead of CDC-NCM for USB networking.</li>
+  <li><strong>Flash the microSD card</strong>Use balenaEtcher or Raspberry Pi Imager (“Use custom”), or <code>dd</code> on Linux:
+<pre><code><span class="p">$ </span>lsblk                                   <span class="c"># find the card, e.g. /dev/sdX; check it twice</span>
+<span class="p">$ </span>unzip milkv-duos-*-arm64-*.img.zip
+<span class="p">$ </span>sudo dd if=milkv-duos-*.img of=/dev/sdX bs=4M conv=fsync status=progress</code></pre></li>
+  <li><strong>Select the ARM core</strong>The Duo S has a switch that chooses whether the big core boots as RISC-V or ARM. This project runs Linux on the <strong>ARM</strong> Cortex-A53; the C906 little core is reserved for real-time control. Set the switch to ARM before powering up. You can confirm it on the console: a boot log that starts with <code>B</code> is ARM, one that starts with <code>C</code> is RISC-V.</li>
+  <li><strong>Insert the card</strong>Put the microSD card in the Duo S. Leave the Duo S off the Robotics Board for now.</li>
+</ol>
+
+<h2 id="usb">3. First login over USB-C</h2>
+<p>With the Duo S <strong>on its own</strong> (not on the board), connect its USB-C port to your PC with a data cable. This powers the board and creates a USB network adapter (CDC-NCM). Once it has booted, the Duo S hands your PC an address by DHCP.</p>
+<pre><code><span class="p">$ </span>ping 192.168.42.1
+<span class="p">$ </span>ssh root@192.168.42.1        <span class="c"># default password: milkv</span></code></pre>
+<div class="table-wrap"><table>
+  <thead><tr><th>PC</th><th>What to expect</th></tr></thead>
+  <tbody>
+    <tr><td>Linux</td><td>Driver-free. A new interface (<code>usb0</code> or <code>enx…</code>) appears with a 192.168.42.x address.</td></tr>
+    <tr><td>macOS</td><td>Driver-free. The adapter appears in System Settings → Network.</td></tr>
+    <tr><td>Windows 11 / recent 10</td><td>Usually driver-free. On older systems, open Device Manager, update the unknown device's driver and choose <em>Network adapters → Microsoft → UsbNcm Host Device</em>.</td></tr>
+  </tbody>
+</table></div>
+<p>Once you are in, change the default password and take a look around:</p>
+<pre><code><span class="p">[root@milkv-duo]~# </span>passwd
+<span class="p">[root@milkv-duo]~# </span>uname -a              <span class="c"># should report aarch64</span>
+<span class="p">[root@milkv-duo]~# </span>cat /proc/cpuinfo | head
+<span class="p">[root@milkv-duo]~# </span>ip addr</code></pre>
+<p>To copy files across, use <code>scp</code> from your PC, for example <code>scp build/tool root@192.168.42.1:/root/</code>.</p>
+<div class="callout ok"><span class="title">Checkpoint</span><p>You can SSH into the Duo S and <code>uname -m</code> prints <code>aarch64</code>. Power it down (<code>poweroff</code>, then unplug) before going on.</p></div>
+
+<h2 id="on-the-board">4. Connect to the Duo S on the Robotics Board</h2>
+<p>Do this only after the board has passed bring-up <a href="board/bring-up.html#stage-1">stages 1–3</a> without the Duo S. Fit the Duo S on its four M2.5 standoffs with the board's J8/J9 sockets on its headers, then choose how to talk to it:</p>
+
+<h3 id="ethernet">Option A: Ethernet</h3>
+<p>The Duo S's RJ45 port sits in the board's notch and stays reachable. Plug it into a router with DHCP, power the board (below), and find the address on your router's client list, or read it from the console with <code>ip addr show eth0</code>. Then <code>ssh root@&lt;address&gt;</code>.</p>
+
+<h3 id="console">Option B: serial console on J22</h3>
+<p>J22 is a 3-pin JST-SH connector that carries the Duo S's UART0, the Linux console. It supplies no power.</p>
+<div class="pinout">
+  <div class="conn">
+    <h4>J22 · Debug UART0</h4>
+    <p>JST-SH 1.0 mm, 3 pins, 3.3 V logic</p>
+    <div class="pins"><span class="pin gnd"><i>1</i>GND</span><span class="pin sig"><i>2</i>Duo TX</span><span class="pin sig"><i>3</i>Duo RX</span></div>
+  </div>
+  <div class="conn">
+    <h4>Adapter wiring</h4>
+    <p>Cross TX and RX. Leave the adapter's power pin unconnected.</p>
+    <div class="pins"><span class="pin gnd">GND → 1</span><span class="pin sig">RX ← 2</span><span class="pin sig">TX → 3</span></div>
+  </div>
+</div>
+<p>Settings: <strong>115200 baud, 8 data bits, no parity, 1 stop bit, no flow control</strong>.</p>
+<pre><code><span class="c"># Linux (the adapter is usually /dev/ttyUSB0 or /dev/ttyACM0)</span>
+<span class="p">$ </span>sudo usermod -aG dialout $USER     <span class="c"># once, then log out and in</span>
+<span class="p">$ </span>picocom -b 115200 /dev/ttyUSB0      <span class="c"># quit with Ctrl-A Ctrl-X</span>
+
+<span class="c"># macOS</span>
+<span class="p">$ </span>screen /dev/tty.usbserial-* 115200
+
+<span class="c"># Windows: PuTTY, Connection type "Serial", COMx, speed 115200</span></code></pre>
+
+<h3 id="power-up">Power up through the board</h3>
+<ol class="steps">
+  <li><strong>Set the bench supply</strong>12.0 V with a <strong>1 A</strong> current limit, connected to J1 (XT30: pin 2 is <code>+</code>, pin 1 is <code>−</code>; check your lead with a meter). No motors, servos or battery yet.</li>
+  <li><strong>Start the console first</strong>Open the serial terminal before switching on, so you see the whole boot log.</li>
+  <li><strong>Switch on</strong>The green power LED lights. The yellow EN and red FLT LEDs stay dark: the motors are disabled until firmware explicitly arms them. Linux boots and the console offers a login prompt.</li>
+  <li><strong>Log in</strong>As <code>root</code> with your new password, either on the console or by SSH over Ethernet.</li>
+</ol>
+<div class="callout warn"><span class="title">The real-time buses belong to the C906</span>
+  <p>In the finished system Linux must not claim I²C4, SPI3, PWM controllers 0–2 or the board's GPIOs; the C906 firmware owns them. For bring-up only, you can enable I²C4 and SPI3 in a <em>test</em> device tree and use <code>i2c-tools</code> and <code>spidev</code>. Remove it before running the C906 firmware.</p>
+</div>
+<p>With a test device tree loaded, a scan of the board's I²C bus should show exactly two devices (bus numbers depend on the image):</p>
+<pre><code><span class="p">[root@milkv-duo]~# </span>i2cdetect -l              <span class="c"># find the I2C4 bus number</span>
+<span class="p">[root@milkv-duo]~# </span>i2cdetect -y &lt;bus&gt;
+<span class="c">#   0x48  ADS1115 rail monitor</span>
+<span class="c">#   0x68  BMI323 IMU (chip ID 0x43)</span></code></pre>
+<p>The full sensor checks, with expected register values and rail readings, are in <a href="board/bring-up.html#stage-4">bring-up stage 4</a>.</p>
+
+<h2 id="ros2">5. See the robot on your PC</h2>
+<p>The robot's description package is generated from the CAD and runs on your PC today. Install <a href="https://docs.ros.org/en/jazzy/Installation.html">ROS 2 Jazzy</a> (Ubuntu 24.04), then:</p>
+<pre><code><span class="p">$ </span>cd ros2
+<span class="p">$ </span>colcon build --packages-select balance_robot_description
+<span class="p">$ </span>source install/setup.bash
+<span class="p">$ </span>ros2 launch balance_robot_description display.launch.py   <span class="c"># RViz with joint sliders</span>
+<span class="p">$ </span>ros2 launch balance_robot_description mock.launch.py      <span class="c"># ros2_control with mock hardware</span></code></pre>
+<p>You drive two hip joints (<code>r_hip_joint</code>, <code>l_hip_joint</code>, 15–55°) and two wheel joints. The knees and four-bar links follow the hips as mimic joints. Keep RViz, simulation and heavy navigation on the PC: the Duo S has 512 MB of RAM.</p>
+
+<h2 id="troubleshooting">Troubleshooting</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>Symptom</th><th>Check</th></tr></thead>
+  <tbody>
+    <tr><td>No network adapter appears over USB</td><td>Use a data cable, not a charge-only one. Use firmware V1.1.2 or later (CDC-NCM). On older Windows, install the UsbNcm driver.</td></tr>
+    <tr><td><code>ping 192.168.42.1</code> fails, but the adapter exists</td><td>Wait about 30 s after power-up for DHCP. Check that the PC's adapter has a 192.168.42.x address.</td></tr>
+    <tr><td>Boot log starts with <code>C</code>, or nothing boots</td><td>The core switch is on RISC-V or doesn't match the image. Set it to ARM and use the ARM64 image.</td></tr>
+    <tr><td>Garbage on the serial console</td><td>The baud rate is not 115200, TX and RX are not crossed, or the adapter is set to 5 V.</td></tr>
+    <tr><td>Nothing at all on the serial console</td><td>Check GND on J22 pin 1 and that TX and RX are crossed. Check that the board's 5 V rail (TP8) reads about 5.3 V.</td></tr>
+    <tr><td>Duo S resets while booting on the board</td><td>The supply is in current limit, or VSYS dips. VSYS should sit near 4.9–5.0 V. See <a href="board/bring-up.html#stage-4">stage 4</a>.</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="next">Next steps</h2>
+<div class="cards">
+  <a class="card" href="board/bring-up.html"><span class="tag">Board</span><h4>First power-on and bring-up</h4><p>Rails, safety chain, sensors and motors, stage by stage.</p></a>
+  <a class="card" href="robot/assembly.html"><span class="tag">Robot</span><h4>Assembly guide</h4><p>Print, fit and wire Balance Robot v1.</p></a>
+</div>

@@ -1,0 +1,216 @@
+<!--meta
+title: Beitlab Robotics: dynamic robots from the silicon up
+description: Beitlab Robotics designs dynamic wheeled-legged robots end to end: drive and power electronics, hard real-time control on RISC-V, and simulation-trained behaviour. Our first platform is Balance Robot v1.
+layout: home
+section: home
+-->
+<section class="orbit" id="robot">
+  <div class="orbit-sticky">
+    <div class="orbit-panel">
+      <div class="orbit-stage" role="img" aria-label="Shaded CAD render of Balance Robot v1. Scrolling turns the camera once around the robot.">
+        <canvas id="orbit-canvas" data-count="60" data-src="{{root}}assets/orbit/f"></canvas>
+        <img src="{{root}}assets/orbit/f00.png" alt="" width="1200" height="900">
+      </div>
+      <div class="orbit-beats">
+        <div class="orbit-beat" data-start="0" data-end="0.2">
+          <h1>Balance Robot v1.</h1>
+          <p>A wheeled biped, built as one system.</p>
+        </div>
+        <div class="orbit-beat" data-start="0.2" data-end="0.4">
+          <h2>The wheel stays under the hip.</h2>
+          <p>Four-bar legs, hip 15–55°. The wheel stays within 0.8 mm of under the hip.</p>
+        </div>
+        <div class="orbit-beat" data-start="0.4" data-end="0.6">
+          <h2>Direct drive, 10 kHz.</h2>
+          <p>Two GM4108H gimbal motors. No gearbox, so no backlash.</p>
+        </div>
+        <div class="orbit-beat" data-start="0.6" data-end="0.8">
+          <h2>Balance at 400 Hz.</h2>
+          <p>The C906 core runs the LQR. Linux only sends intent.</p>
+        </div>
+        <div class="orbit-beat" data-start="0.8" data-end="1">
+          <h2>219 parts. One PCB.</h2>
+          <p>Robotics Board v0.8. The motors stay off until the safety chain is armed.</p>
+          <div class="hero-cta">
+            <a class="btn primary" href="docs/getting-started.html">Get started
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+            <a class="btn" href="docs/robot/index.html">Robot overview</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="platform">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">The platform</span>
+      <h2>One robot, one board, one codebase.</h2>
+      <p>Our first project is a two-wheeled balancing biped with adjustable legs, and the custom
+        Robotics Board that drives it. Both are documented end to end and generated from source.</p>
+    </div>
+    <div class="products">
+      <article class="product">
+        <div class="product-media contain"><img src="{{repo:design/body_v1/out/options/renders/3d/option_B_heights.png}}" alt="Balance Robot v1 side view at three leg heights" loading="lazy"></div>
+        <div class="product-body">
+          <div class="product-top"><h3>Balance Robot v1</h3><span class="badge wip">Prototype build</span></div>
+          <p>A wheeled biped with four-bar legs. One hip servo per leg sets the height and the wheel stays under the hip;
+            two direct-drive brushless motors keep it upright.</p>
+          <ul class="ticks">
+            <li>Four-bar leg: wheel within 0.8 mm of under the hip, 15–55° hip range</li>
+            <li>GM4108H gimbal motors with field-oriented control, no gearbox backlash</li>
+            <li>3D-printed body (PLA/PETG), 4S LiPo, top-mounted E-stop</li>
+            <li>URDF, ROS 2 description and Isaac Lab tasks generated from the CAD</li>
+          </ul>
+          <div class="links">
+            <a class="btn" href="docs/robot/index.html">Robot overview</a>
+            <a class="btn" href="docs/robot/assembly.html">Assembly guide</a>
+          </div>
+        </div>
+      </article>
+      <article class="product">
+        <div class="product-media contain"><img src="{{repo:hardware/kicad/balance_carrier/pcb_top.png}}" alt="Top view of the Robotics Board v0.8 PCB" loading="lazy"></div>
+        <div class="product-body">
+          <div class="product-top"><h3>Robotics Board v0.8</h3><span class="badge ok">Design frozen</span></div>
+          <p>A carrier board for the Milk-V Duo S that puts motor drivers, power conversion, IMU and the safety chain
+            on one 4-layer PCB. No external microcontroller is needed.</p>
+          <ul class="ticks">
+            <li>2 × DRV8313 three-phase drivers, 5.3 V / 5 A and 6 V / 8 A bucks</li>
+            <li>BMI323 IMU, ADS1115 rail monitor, four SPI angle-sensor ports</li>
+            <li>Latched hardware E-stop and watchdog: motors stay off until armed</li>
+            <li>Status LEDs and test points on every safety signal</li>
+          </ul>
+          <div class="links">
+            <a class="btn" href="docs/board/index.html">Board overview</a>
+            <a class="btn" href="docs/board/bring-up.html">Bring-up</a>
+          </div>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="section alt" id="approach">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">What we focus on</span>
+      <h2>Four engineering principles.</h2>
+      <p>Agile robots fail in the gaps between disciplines. We close those gaps by owning every layer and checking
+        each one automatically.</p>
+    </div>
+    <div class="features">
+      <div class="feature">
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="2"/><path d="M9 1v4M15 1v4M9 19v4M15 19v4M1 9h4M1 15h4M19 9h4M19 15h4"/><rect x="9" y="9" width="6" height="6"/></svg></div>
+        <h3>Hard real-time on open silicon</h3>
+        <p>The SG2000's C906 RISC-V core runs FreeRTOS with FOC at 10 kHz and the balance loop at 400 Hz. Linux and ROS 2 run beside it on the Cortex-A53.</p>
+      </div>
+      <div class="feature">
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5l-8-3Z"/><path d="m9 12 2 2 4-4"/></svg></div>
+        <h3>Safety in hardware</h3>
+        <p>Motor enable is <code>MOT_EN_REQ</code> AND a watchdog AND a latched E-stop. The E-stop also switches off the motor supply, and the board powers up safe.</p>
+      </div>
+      <div class="feature">
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m8 6-6 6 6 6M16 6l6 6-6 6M14 4l-4 16"/></svg></div>
+        <h3>Everything generated, everything checked</h3>
+        <p>The schematic and PCB come from Python, the body from CadQuery, and the URDF and USD from the CAD. ERC, DRC, interference sweeps and closed-loop tests run on every change.</p>
+      </div>
+      <div class="feature">
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></div>
+        <h3>Simulation first</h3>
+        <p>The firmware controller runs in the loop against physics, and Isaac Lab trains policies across thousands of parallel robots, which are compared with the LQR baseline before hardware.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="architecture">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">System architecture</span>
+      <h2>Two cores, one board, no external MCU.</h2>
+      <p>Balance never waits on Linux. Linux sends commands and reads state through fixed-size rings in shared memory;
+        the real-time core owns every sensor and actuator.</p>
+    </div>
+    <div class="arch">
+      <div class="arch-col">
+        <p class="arch-label">Cortex-A53 · Linux</p>
+        <div class="block"><h4>ROS 2</h4><p><code>/cmd_vel</code>, height and mode in; <code>/odom</code>, state and diagnostics out.</p></div>
+        <div class="block"><h4>Supervisor</h4><p>Arming, fault reset and intent sent at 20–50 Hz. Startup is always DISABLED.</p></div>
+        <div class="block"><h4>Navigation and perception</h4><p>Nav2 and policies; heavy tools stay on the PC.</p></div>
+      </div>
+      <div class="arch-link"><span>Shared<br>memory<br>+ mailbox</span></div>
+      <div class="arch-col">
+        <p class="arch-label">C906 RISC-V · FreeRTOS</p>
+        <div class="block hot"><span class="rate">400 Hz</span><h4>Balance task</h4><p>State estimate, gain-scheduled LQR, yaw and height control, watchdog kick.</p></div>
+        <div class="block hot"><span class="rate">10 kHz</span><h4>Fast ISR</h4><p>SPI angle frames, voltage-mode FOC with SVPWM for both wheels.</p></div>
+        <div class="block"><span class="rate">async</span><h4>I²C task</h4><p>BMI323 bursts and ADS1115 rails, double-buffered.</p></div>
+      </div>
+      <div class="arch-link"><span>PWM<br>SPI · I²C<br>GPIO</span></div>
+      <div class="arch-col">
+        <p class="arch-label">Robotics Board v0.8</p>
+        <div class="block"><h4>Drive</h4><p>2 × DRV8313 → GM4108H wheels; 2 × DS3240 hip servos on 6 V / 8 A.</p></div>
+        <div class="block"><h4>Sensing</h4><p>4 × AS5048A (rotors and knees), BMI323 IMU, rail monitor.</p></div>
+        <div class="block hot"><h4>Safety chain</h4><p>Latched E-stop cuts VMOT, 10 ms watchdog one-shot, enable gate.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!--optional-->
+<section class="section alt" id="film">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Film</span>
+      <h2>Balance Robot v1 in motion.</h2>
+      <p>Rendered from the production CAD: every part, screw and cable is the one in the assembly model.</p>
+    </div>
+    <div class="film">
+      <video controls preload="none" playsinline poster="assets/img/promo-poster.jpg">
+        <source src="{{repo:design/body_v1/out/video/beitlab_balance_robot_v1_promo.mp4}}" type="video/mp4">
+      </video>
+    </div>
+    <div class="film-cap"><span>Promo film · 56 s · {{size:design/body_v1/out/video/beitlab_balance_robot_v1_promo.mp4}}</span><a href="docs/robot/assembly.html#video">Watch the step-by-step assembly guide →</a></div>
+  </div>
+</section>
+<!--/optional-->
+
+<section class="section" id="roadmap">
+  <div class="wrap split">
+    <div class="section-head">
+      <span class="eyebrow">Roadmap</span>
+      <h2>Where Project 01 stands.</h2>
+      <p>We publish status as it is. Designs are complete and checked in software; the next milestones are physical.</p>
+      <p style="margin-top:22px"><span class="badge ok">Done</span> <span class="badge wip">In progress</span> <span class="badge todo">Next</span></p>
+    </div>
+    <ol class="timeline">
+      <li class="done"><span class="when">Nov 2026 · done</span><h3>Robotics Board v0.5 → v0.8 routed and frozen</h3>
+        <p>Four revisions: routed 4-layer layout, accessory power outputs, corrected labels, then every part re-sourced for production assembly. Zero DRC errors, zero schematic mismatches.</p></li>
+      <li class="done"><span class="when">Nov 2026 · done</span><h3>Body v1 with four-bar legs designed and checked</h3>
+        <p>Parametric CadQuery model, interference-checked across the full leg sweep, with a mounted model of all 134 pieces of hardware.</p></li>
+      <li class="done"><span class="when">Nov 2026 · done</span><h3>Digital twin and training</h3>
+        <p>URDF and ROS 2 description from the CAD, an Isaac Sim asset, the firmware LQR in the loop, and Isaac Lab balance and velocity-tracking policies.</p></li>
+      <li class="now"><span class="when">Now</span><h3>First boards and first print</h3>
+        <p>The first production boards, then stage-by-stage bring-up: rails, safety chain, sensors, one motor at a time.</p></li>
+      <li><span class="when">Next</span><h3>Calibration and first balance</h3>
+        <p>Measure motor constants, calibrate the knees against their sensors, identify mass properties, and balance on the floor under supervision.</p></li>
+      <li><span class="when">Later</span><h3>Autonomy</h3>
+        <p>The ROS 2 bridge on hardware, odometry and Nav2, then sim-trained policies deployed beside the LQR.</p></li>
+    </ol>
+  </div>
+</section>
+
+<section class="section alt">
+  <div class="wrap">
+    <div class="cta">
+      <div>
+        <h2>Build it, bring it up, connect it.</h2>
+        <p>Assembly, first power-on and your first SSH session, step by step.</p>
+      </div>
+      <div class="hero-cta">
+        <a class="btn primary" href="docs/index.html">Open the documentation</a>
+        <a class="btn" href="docs/getting-started.html">Connect to your PC</a>
+      </div>
+    </div>
+  </div>
+</section>

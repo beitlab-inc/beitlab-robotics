@@ -1,0 +1,28 @@
+{
+  "name": "Beitlab Robotics",
+  "repo_url": "",
+  "base_url": "",
+  "docs_nav": [
+    {
+      "title": "Start here",
+      "items": [
+        {"page": "docs/index.html", "label": "Documentation home"},
+        {"page": "docs/getting-started.html", "label": "First steps: connect to your PC"}
+      ]
+    },
+    {
+      "title": "Robotics Board",
+      "items": [
+        {"page": "docs/board/index.html", "label": "Board overview"},
+        {"page": "docs/board/bring-up.html", "label": "First power-on and bring-up"}
+      ]
+    },
+    {
+      "title": "Balance Robot v1",
+      "items": [
+        {"page": "docs/robot/index.html", "label": "Robot overview"},
+        {"page": "docs/robot/assembly.html", "label": "Assembly guide"}
+      ]
+    }
+  ]
+}

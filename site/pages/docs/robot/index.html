@@ -1,0 +1,97 @@
+<!--meta
+title: Balance Robot v1 · Beitlab Robotics
+description: Balance Robot v1, a two-wheeled balancing biped with four-bar legs, direct-drive GM4108H wheel motors, DS3240 hip servos and the Robotics Board v0.8.
+layout: docs
+section: robot
+-->
+<p class="kicker"><span class="eyebrow">Balance Robot v1</span></p>
+<h1>Balance Robot v1</h1>
+<p class="lead">A two-wheeled balancing biped with adjustable legs. One servo per leg sets the height through a four-bar linkage that keeps the wheel under the hip, and two direct-drive brushless motors keep the robot upright.</p>
+<div class="meta-row"><span class="badge ok">CAD designed and checked</span><span class="badge wip">First print pending</span><span class="badge">Leg option B</span></div>
+
+<figure>
+  <img src="{{repo:design/body_v1/out/options/renders/3d/option_B_views.png}}" alt="Labelled front, rear, side and cutaway views of Balance Robot v1" loading="lazy">
+  <figcaption>Option B, the chosen leg: front three-quarter view at hip 35°, rear, right side, and a cutaway with the cover and left half removed.</figcaption>
+</figure>
+
+<h2 id="specs">Specifications</h2>
+<dl class="specs">
+  <div><dt>Height</dt><dd>195–259 mm<small>to the cover, by crouch; E-stop +12 mm</small></dd></div>
+  <div><dt>Body</dt><dd>116 × 84 × 124 mm<small>four 3D-printed sections</small></dd></div>
+  <div><dt>Track</dt><dd>196 mm<small>wheel centre to centre</small></dd></div>
+  <div><dt>Wheels</dt><dd>Ø 84.8 mm<small>TPU tread on a printed rim</small></dd></div>
+  <div><dt>Pitching body</dt><dd>1.19 kg<small>without wheels, from CAD</small></dd></div>
+  <div><dt>Wheel motors</dt><dd>2 × GM4108H-120T<small>direct drive, ≈ 0.15 N·m each</small></dd></div>
+  <div><dt>Leg actuators</dt><dd>2 × DS3240<small>40 kg·cm, at the hips</small></dd></div>
+  <div><dt>Battery</dt><dd>4S LiPo<small>75 × 37 × 38 mm default pack</small></dd></div>
+  <div><dt>Computer</dt><dd>Milk-V Duo S<small>on the Robotics Board v0.8</small></dd></div>
+  <div><dt>Hip range</dt><dd>15–55°<small>knee 30–110°</small></dd></div>
+</dl>
+<p class="small muted">Masses are design values from the CAD with estimates for bought parts. Replace them with weighed values before designing real gains.</p>
+
+<h2 id="layout">Layout</h2>
+<p>The body is a stack of four printed parts, bottom to top. Axes: X lateral (+ right), Y forward, Z up from the underside of the body.</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>Z (mm)</th><th>Part</th><th>Holds</th></tr></thead>
+  <tbody>
+    <tr><td>0–45</td><td><strong>Base</strong> and battery door</td><td>The 4S pack, loaded from the rear on two velcro straps; two external pivot bosses for the legs' bones</td></tr>
+    <tr><td>45–75</td><td><strong>Frame</strong></td><td>Both DS3240 servos on their sides, back to back, screwed to the side walls from outside</td></tr>
+    <tr><td>75–78</td><td><strong>Deck</strong></td><td>Bosses for the Duo S and the Robotics Board, a slot for the servo leads</td></tr>
+    <tr><td>78–124</td><td><strong>Cover</strong></td><td>E-stop, openings for the power connectors and the Duo S's RJ45 and USB-A, vents, six M3 accessory mounts</td></tr>
+  </tbody>
+</table></div>
+<p>The board sits turned 180°: its power entry and the Duo S ports face the rear, and the motor, servo, sensor, E-stop and console connectors face the front. The cover has six M3 accessory points (four on the front face, two on top) with captive nuts, for a sensor, camera, bumper or handle.</p>
+<figure>
+  <img src="{{repo:design/body_v1/out/renders/exploded.png}}" alt="Exploded view of the body: base, frame, deck and cover" loading="lazy">
+  <figcaption>Exploded body: base with battery, frame with servos, deck, the Duo S and board, and the cover.</figcaption>
+</figure>
+
+<h2 id="legs">The four-bar leg</h2>
+<p>Each thigh bolts straight onto its servo's 25T aluminium clamp arm; there is no hip shaft or hip bearing. A printed “bone” runs from a pivot on the base wall to the shin. Together they form a four-bar linkage that keeps the knee within 1° of twice the hip angle, and the wheel within 0.8 mm of directly under the hip, across the whole range.</p>
+<div class="fig-pair">
+  <figure>
+    <img src="{{repo:design/body_v1/out/options/renders/option_B_kinematics.png}}" alt="Four-bar kinematics of the option B leg" loading="lazy">
+    <figcaption>Kinematics: wheel drift and knee angle against hip angle.</figcaption>
+  </figure>
+  <figure>
+    <img src="{{repo:design/body_v1/out/options/renders/3d/option_B_hip.png}}" alt="Hip close-up: the clamp arm with and without the thigh" loading="lazy">
+    <figcaption>The hip: the servo's clamp arm with and without the thigh.</figcaption>
+  </figure>
+</div>
+<p>Because the wheel stays under the hip, the controller can treat leg length as height, and the servo pulse map stays linear after calibration. The cost is torque: the servo needs up to about 1.46 N·m static at full crouch, around 37 % of its stall torque. Each knee carries an AS5048A angle sensor, so the controller measures the leg rather than trusting the servo command. A servo that fails to track latches a fault instead of corrupting the gain schedule.</p>
+<!--optional-->
+<figure>
+  <img src="{{repo:design/body_v1/out/options/renders/3d/option_B_crouch.gif}}" alt="Animation of the robot crouching and standing" loading="lazy">
+  <figcaption>Crouch animation, hip 15–55°.</figcaption>
+</figure>
+<!--/optional-->
+
+<h2 id="mass">Mass and centre of mass</h2>
+<p>The centre of mass sits <em>below</em> the hip, which needs less wheel torque but falls faster. The LQR delay margin is 1–2 ticks of 2.5 ms.</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>Hip / knee</th><th class="num">CoM above axle</th><th class="num">CoM relative to hip</th></tr></thead>
+  <tbody>
+    <tr><td>15° / 30° (tall)</td><td class="num">108 mm</td><td class="num">47 mm below</td></tr>
+    <tr><td>35° / 70°</td><td class="num">91 mm</td><td class="num">40 mm below</td></tr>
+    <tr><td>55° / 110° (crouch)</td><td class="num">62 mm</td><td class="num">29 mm below</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="control">Control</h2>
+<p>The balance state is wheel position and speed relative to their references, body pitch and pitch rate. A gain-scheduled LQR, with the gains interpolated across leg heights, computes the total wheel torque; a yaw term from the gyro splits it between the wheels.</p>
+<ul>
+  <li><strong>STAND</strong> balances from an upright pose at a height set from Linux. <strong>CROUCH</strong> goes to the minimum height. <strong>DRIVE</strong> follows speed and yaw-rate commands. <strong>RECOVERY</strong> disables the outputs: autonomous get-up is not implemented.</li>
+  <li>Arming requires an upright estimate and a commissioned configuration. Faults latch; reset needs a fresh, disarmed command and an upright robot, then a separate arm request.</li>
+  <li>There is intentionally no default gain table. Gains are designed offline from measured mass properties with <code>tools/control/design_lqr.py</code>.</li>
+</ul>
+
+<h2 id="sim">Simulation</h2>
+<p>The URDF, ROS 2 description and Isaac Sim asset are generated from the same CAD. The firmware controller runs in the loop on the host, and Isaac Lab tasks train balance, velocity-tracking and leg policies with terrain curricula and domain randomization. Policies export to C arrays for comparison with the LQR. To view the model on your PC, see <a href="../getting-started.html#ros2">First steps</a>.</p>
+
+<h2 id="files">CAD files</h2>
+<div class="cards">
+  <a class="card" href="{{repo:design/body_v1/out/options/option_B/robot_option_B.step}}"><span class="tag">STEP</span><h4>Whole robot</h4><p>Option B at hip 30°, without the board. Opens in Onshape and FreeCAD.</p><span class="size">STEP · {{size:design/body_v1/out/options/option_B/robot_option_B.step}}</span></a>
+  <!--optional--><a class="card" href="{{repo:design/body_v1/out/options/option_B/robot_option_B_mounted.step}}"><span class="tag">STEP</span><h4>Fully mounted</h4><p>The same, with all 134 screws, inserts, bearings, washers, standoffs and magnets.</p><span class="size">STEP · {{size:design/body_v1/out/options/option_B/robot_option_B_mounted.step}}</span></a><!--/optional-->
+  <a class="card" href="{{repo:design/body_v1/out/options/option_B/hardware_bom.md}}"><span class="tag">BOM</span><h4>Hardware list</h4><p>Every bought part in the mounted model, counted and located.</p><span class="size">Text · {{size:design/body_v1/out/options/option_B/hardware_bom.md}}</span></a>
+  <a class="card" href="assembly.html#print"><span class="tag">STL</span><h4>Printed parts</h4><p>Every part in print orientation, with quantities and notes.</p></a>
+</div>

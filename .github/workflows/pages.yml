@@ -1,0 +1,63 @@
+# Builds the Beitlab Robotics website (tools/site/build_site.py: site/ plus the generated renders, PDFs and
+# videos it links, link-checked) and publishes it with GitHub Pages.
+# One-time setup: repository Settings -> Pages -> Build and deployment -> Source: "GitHub Actions".
+# Custom domain: Settings -> Pages -> Custom domain (a CNAME file is not used with Actions deploys),
+# then set "base_url" in site/site.json so canonical links, the sitemap and the 404 page use it.
+name: pages
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - "site/**"
+      - "tools/site/build_site.py"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: Robotics_landing
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ vars.ROBOT_REPOSITORY || format('{0}/Balanced_robot', github.repository_owner) }}
+          token: ${{ secrets.WORKSPACE_READ_TOKEN || github.token }}
+          path: Balanced_robot
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ vars.BOARD_REPOSITORY || format('{0}/Robotics_board', github.repository_owner) }}
+          token: ${{ secrets.WORKSPACE_READ_TOKEN || github.token }}
+          path: Robotics_board
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Check product asset paths
+        working-directory: Robotics_landing
+        run: make test
+      - name: Build and link-check the site
+        working-directory: Robotics_landing
+        run: python3 tools/site/build_site.py
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: Robotics_landing/build/site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

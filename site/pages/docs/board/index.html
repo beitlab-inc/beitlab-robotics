@@ -1,0 +1,141 @@
+<!--meta
+title: Robotics Board v0.8 · Beitlab Robotics
+description: The Beitlab Robotics Board v0.8, a Milk-V Duo S carrier with two DRV8313 motor drivers, on-board power, a BMI323 IMU, four SPI angle-sensor ports and a latched hardware E-stop.
+layout: docs
+section: board
+-->
+<p class="kicker"><span class="eyebrow">Robotics Board</span></p>
+<h1>Robotics Board v0.8</h1>
+<p class="lead">A carrier board for the Milk-V Duo S that connects every robot device to the SG2000's C906 RISC-V core. The motor drivers, power conversion, IMU and safety chain are all on board; motors, sensors and servos plug in by cable.</p>
+<div class="meta-row"><span class="badge ok">Frozen 2026-11-11</span><span class="badge">4 layers · 100 × 66 mm</span><span class="badge">219 parts</span><span class="badge wip">Bench qualification pending</span></div>
+
+<figure>
+  <img src="{{repo:hardware/kicad/balance_carrier/pcb_top.png}}" alt="Top side of the Robotics Board v0.8 with connector labels" loading="lazy">
+  <figcaption>Top side. The Duo S sits under the left 45 mm, its RJ45 and USB-A in the notch. Power entry is on the right edge, motor and servo connectors along the bottom.</figcaption>
+</figure>
+
+<h2 id="glance">At a glance</h2>
+<dl class="specs">
+  <div><dt>Host</dt><dd>Milk-V Duo S<small>SG2000: A53 Linux + C906 RTOS</small></dd></div>
+  <div><dt>Input</dt><dd>4S LiPo, 12–16.8 V<small>XT30, 10 A fuse, reverse protection</small></dd></div>
+  <div><dt>Wheel drivers</dt><dd>2 × DRV8313<small>3-phase, from the switched VMOT</small></dd></div>
+  <div><dt>Logic rail</dt><dd>5.32 V / 5 A<small>TPS54560 buck → Duo S VSYS</small></dd></div>
+  <div><dt>Servo rail</dt><dd>6.0 V / 8 A<small>LM61480 synchronous buck</small></dd></div>
+  <div><dt>IMU</dt><dd>Bosch BMI323<small>I²C4, data-ready interrupt</small></dd></div>
+  <div><dt>Angle sensors</dt><dd>4 × SPI ports<small>AS5048A, 14-bit, own chip selects</small></dd></div>
+  <div><dt>Safety</dt><dd>Latched E-stop<small>+ 10 ms watchdog, cuts VMOT</small></dd></div>
+</dl>
+
+<h2 id="architecture">Architecture</h2>
+<p>There is no external microcontroller. The SG2000's C906 little core runs FreeRTOS: FOC for both wheels in a 10 kHz fast interrupt, the 400 Hz balance loop and the hip servos. Linux on the Cortex-A53 runs ROS 2 and talks to it through shared memory. The board routes every real-time signal to pins the C906 can own.</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>Function</th><th>Part</th><th>Interface</th></tr></thead>
+  <tbody>
+    <tr><td>Wheel motors</td><td>2 × iPower GM4108H-120T (11 pole pairs, 11.1 Ω)</td><td>Phases on J2 (L) / J3 (R)</td></tr>
+    <tr><td>Wheel drivers</td><td>2 × TI DRV8313 (U8 L, U9 R)</td><td>3 PWM each, shared EN, nSLEEP, nRESET, wired-OR nFAULT</td></tr>
+    <tr><td>Rotor angle</td><td>AS5048A board shipped on each GM4108H</td><td>SPI 1 (J15), SPI 2 (J16)</td></tr>
+    <tr><td>Knee angle</td><td>AS5048A board on each knee axis</td><td>SPI 3 (J17), SPI 4 (J18)</td></tr>
+    <tr><td>Hip servos</td><td>2 × DSSERVO DS3240 (40 kg·cm)</td><td>J20 / J21, 50–330 Hz PWM, 6 V</td></tr>
+    <tr><td>IMU</td><td>Bosch BMI323 (U10, 0x68)</td><td>I²C4 through a PCA9306, INT1 data-ready</td></tr>
+    <tr><td>Rail monitor</td><td>TI ADS1115 (0x48)</td><td>I²C4: VBUS, VSERVO, +5 V, VMOT</td></tr>
+    <tr><td>Accessory power</td><td>TPS16630 eFuse, TPS2553 switch</td><td>J24 battery out (2.5 A), J25 5 V out (0.5 A)</td></tr>
+    <tr><td>Expansion</td><td>Optional 3.3 V I²C display</td><td>J23</td></tr>
+    <tr><td>Debug</td><td>Linux console, UART0</td><td>J22</td></tr>
+  </tbody>
+</table></div>
+<p>The right wheel runs on PWM controller 0 (3.3 V header J3) and the left wheel on controller 2 (1.8 V header J4, through a level translator), so each wheel's three phases update together. All four angle sensors share SPI3.</p>
+
+<h2 id="connectors">Connectors and pinouts</h2>
+<p>Pin 1 is marked on the silkscreen. Check every cable with a meter before first power-on: JST-SH and JST-XH leads are easy to build mirrored.</p>
+<div class="pinout">
+  <div class="conn"><h4>J1 · Battery in</h4><p>XT30 male (XT30UPB-M), vertical. 12–16.8 V.</p>
+    <div class="pins"><span class="pin gnd"><i>1</i>− GND</span><span class="pin pwr"><i>2</i>+ BAT</span></div></div>
+  <div class="conn"><h4>J2 / J3 · Motor phases</h4><p>JST-XH 2.5 mm, 3 pins. Left / right wheel.</p>
+    <div class="pins"><span class="pin sig"><i>1</i>U</span><span class="pin sig"><i>2</i>V</span><span class="pin sig"><i>3</i>W</span></div></div>
+  <div class="conn"><h4>J15–J18 · SPI 1–4</h4><p>JST-SH 1.0 mm, 6 pins, 3.3 V. Rotor L, rotor R, knee L, knee R (<a href="#spi-labels">labels</a>).</p>
+    <div class="pins"><span class="pin pwr"><i>1</i>3V3</span><span class="pin gnd"><i>2</i>GND</span><span class="pin sig"><i>3</i>SCK</span><span class="pin sig"><i>4</i>MISO</span><span class="pin sig"><i>5</i>MOSI</span><span class="pin sig"><i>6</i>CS</span></div></div>
+  <div class="conn"><h4>J20 / J21 · Servos</h4><p>2.54 mm header, 3 pins, 6 V rail. Left / right hip.</p>
+    <div class="pins"><span class="pin sig"><i>1</i>PWM</span><span class="pin pwr"><i>2</i>6 V</span><span class="pin gnd"><i>3</i>GND</span></div></div>
+  <div class="conn"><h4>J10 · E-stop loop</h4><p>JST-SH, 2 pins. A normally-closed switch between them.</p>
+    <div class="pins"><span class="pin pwr"><i>1</i>SUPPLY</span><span class="pin sig"><i>2</i>ESTOP_OK</span></div></div>
+  <div class="conn"><h4>J22 · Debug UART0</h4><p>JST-SH, 3 pins, 3.3 V logic, no power.</p>
+    <div class="pins"><span class="pin gnd"><i>1</i>GND</span><span class="pin sig"><i>2</i>Duo TX</span><span class="pin sig"><i>3</i>Duo RX</span></div></div>
+  <div class="conn"><h4>J23 · I²C display</h4><p>JST-SH, 4 pins. 3.3 V devices only; shares the IMU bus.</p>
+    <div class="pins"><span class="pin gnd"><i>1</i>GND</span><span class="pin pwr"><i>2</i>3V3</span><span class="pin sig"><i>3</i>SDA</span><span class="pin sig"><i>4</i>SCL</span></div></div>
+  <div class="conn"><h4>J24 · Accessory battery out</h4><p>XT30 female. 2.5 A limit, off while the E-stop is open.</p>
+    <div class="pins"><span class="pin gnd"><i>1</i>− GND</span><span class="pin pwr"><i>2</i>+ VBUS</span></div></div>
+  <div class="conn"><h4>J25 · Accessory 5 V out</h4><p>JST-PH 2 pins. 0.5 A, logic power only.</p>
+    <div class="pins"><span class="pin gnd"><i>1</i>− GND</span><span class="pin pwr"><i>2</i>+ 5 V</span></div></div>
+</div>
+<h3 id="spi-labels">Angle-sensor ports</h3>
+<p>All four ports are on one SPI3 bus with a chip select each. Depending on the production batch, a v0.8 board's silkscreen shows either the original names or SPI 1–4. The wiring is identical.</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>Connector</th><th>Original label</th><th>Newer label</th><th>Sensor</th><th>Chip select</th></tr></thead>
+  <tbody>
+    <tr><td>J15</td><td>ROTOR L</td><td>SPI 1</td><td>Left wheel motor AS5048A</td><td>B16 (SPI3_CS)</td></tr>
+    <tr><td>J16</td><td>ROTOR R</td><td>SPI 2</td><td>Right wheel motor AS5048A</td><td>B18</td></tr>
+    <tr><td>J17</td><td>KNEE L</td><td>SPI 3</td><td>Left knee AS5048A</td><td>B22</td></tr>
+    <tr><td>J18</td><td>KNEE R</td><td>SPI 4</td><td>Right knee AS5048A</td><td>B21</td></tr>
+  </tbody>
+</table></div>
+<p>J8 and J9 are 2 × 13 sockets on the bottom side that take the Duo S's J3 (3.3 V) and J4 (1.8 V) headers. The board sits about 11 mm above the Duo S on four M2.5 standoffs. Two M3 holes on the right edge (H1, H2) fix the stack to the chassis.</p>
+
+<h2 id="power">Power</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>Rail</th><th>Source</th><th>Peak load</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td><code>VBUS</code> 12–16.8 V</td><td>4S pack, 10 A NANO2 fuse, AOD4185 PMOS</td><td>≈ 8 A (≈ 10 A with J24 at its limit)</td><td>SMBJ20A TVS, 220 µF bulk</td></tr>
+    <tr><td><code>VMOT</code></td><td>VBUS through Q2, on only while the E-stop latch is set</td><td>≈ 3 A, both motors</td><td>Soft ramp, about 30 V/ms</td></tr>
+    <tr><td><code>VSERVO</code> 6.0 V</td><td>LM61480 buck, 8 A</td><td>2 × 3.5 A stall</td><td>A double stall is fine for seconds, not continuously</td></tr>
+    <tr><td><code>+5V</code> 5.32 V</td><td>TPS54560 buck, 5 A</td><td>≈ 1.2 A + J25</td><td>Feeds Duo S VSYS through a Schottky, about 4.9–5.0 V</td></tr>
+    <tr><td><code>+3V3</code></td><td>AP2112K-3.3</td><td>≈ 90 mA</td><td>Sensors, IMU, ADC, logic</td></tr>
+    <tr><td><code>+1V8</code></td><td>AP2112K-1.8</td><td>&lt; 5 mA</td><td>Level-translator references</td></tr>
+  </tbody>
+</table></div>
+<div class="callout warn"><span class="title">Plugging in the battery</span>
+  <p>About 260 µF of input capacitance charges through Q1's body diode when the pack is connected, so expect a spark at the XT30. Use an anti-spark lead, a 10 Ω pre-charge resistor bridged out after a second, or a battery switch that is closed last. The E-stop cuts motor power, not the battery: fit a physical battery disconnect as well.</p>
+</div>
+<p><strong>Torque budget.</strong> The GM4108H is a direct-drive gimbal motor. With the firmware's 1.5 A current clamp, expect about 0.15 N·m per wheel. With the robot's 84.8 mm wheels that is enough to recover from a lean of roughly 20°, not for fast get-ups: keep the robot light. There is no current sensing; torque is set through a motor model, so measure R, K<sub>e</sub> and the zero electrical angle on every motor.</p>
+
+<h2 id="safety">Safety chain</h2>
+<p>Motor enable is decided in hardware, independently of software:</p>
+<pre><code>MOT_EN = MOT_EN_REQ  AND  WDT_OK  AND  ESTOP_RUN     <span class="c"># 74LVC1G11 → both DRV8313 EN pins</span></code></pre>
+<ul>
+  <li><strong>Watchdog (WDT_OK).</strong> A 74LVC1G123 retriggerable one-shot of about 10 ms. The C906 toggles <code>WDT_KICK</code> on every 400 Hz balance tick. It triggers on edges, so a hung core holding the pin high <em>or</em> low drops EN within about 10 ms.</li>
+  <li><strong>E-stop latch (ESTOP_RUN).</strong> A 74AUP1G74 flip-flop. Opening the normally-closed loop on J10, or unplugging it, clears the latch at once: EN drops and Q2 cuts VMOT within about 2 ms. A bouncing switch cannot set it again. Only a rising <code>ESTOP_ARM</code> edge from firmware, with <code>MOT_EN_REQ</code> high and the loop closed, re-arms it.</li>
+  <li><strong>Safe at power-up.</strong> A supervisor (U15) holds the latch clear through startup and brownouts, and every control line has a pull-down. The drivers stay asleep and disabled while Linux boots.</li>
+  <li><strong>Accessory output.</strong> J24 follows the E-stop latch by default (jumper JP1, pads 1–2). Moving it to 2–3 keeps J24 on whenever the board is powered: do that only deliberately.</li>
+  <li><strong>The servo rail is not cut</strong> by the E-stop, because cutting knee power would drop the robot. The servo-hold policy on faults is a firmware decision.</li>
+</ul>
+
+<h2 id="status-leds">Status LEDs and test points</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>Indicator</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td>D4, green</td><td>Board powered</td></tr>
+    <tr><td>D7, yellow, <code>EN</code></td><td><code>MOT_EN</code> high: the motors are enabled</td></tr>
+    <tr><td>D8, red, <code>FLT</code></td><td>A DRV8313 is reporting a fault (nFAULT low)</td></tr>
+    <tr><td>D16, red, <code>FLT VBUS</code></td><td>J24 or J25 fault: overload, over-temperature, over/under-voltage or back-feed</td></tr>
+  </tbody>
+</table></div>
+<div class="table-wrap"><table>
+  <thead><tr><th>Test point</th><th>Net</th><th>Test point</th><th>Net</th></tr></thead>
+  <tbody>
+    <tr><td>TP1</td><td><code>WDT_OK</code></td><td>TP2</td><td><code>MOT_EN</code></td></tr>
+    <tr><td>TP3, TP4, TP11</td><td>GND</td><td>TP5</td><td><code>VBUS</code></td></tr>
+    <tr><td>TP6</td><td><code>VMOT</code></td><td>TP7</td><td><code>VSERVO</code></td></tr>
+    <tr><td>TP8</td><td><code>+5V</code></td><td>TP9</td><td><code>ESTOP_RUN</code></td></tr>
+    <tr><td>TP10</td><td><code>DRV_NFAULT</code></td><td></td><td></td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="files">Reference documents</h2>
+<div class="cards">
+  <a class="card" href="{{repo:hardware/releases/carrier-v0.8/docs/balance_carrier.pdf}}"><span class="tag">Schematic</span><h4>Full schematic</h4><p>Every sheet of the v0.8 design.</p><span class="size">PDF · {{size:hardware/releases/carrier-v0.8/docs/balance_carrier.pdf}}</span></a>
+  <a class="card" href="{{repo:hardware/SUBSYSTEMS.pdf}}"><span class="tag">Report</span><h4>Subsystems</h4><p>Block diagrams, board maps, derived values and measured layout checks.</p><span class="size">PDF · {{size:hardware/SUBSYSTEMS.pdf}}</span></a>
+  <a class="card" href="{{repo:hardware/CIRCUITS.pdf}}"><span class="tag">Report</span><h4>Circuit drawings</h4><p>Each subsystem with standard symbols, checked against the netlist.</p><span class="size">PDF · {{size:hardware/CIRCUITS.pdf}}</span></a>
+</div>
+<figure>
+  <img src="{{repo:hardware/kicad/balance_carrier/pcb_bottom.png}}" alt="Bottom side of the Robotics Board v0.8" loading="lazy">
+  <figcaption>Bottom side: J8/J9 Duo S sockets, buck feedback parts, cable ESD arrays, bulk capacitors and the JP1 jumper.</figcaption>
+</figure>

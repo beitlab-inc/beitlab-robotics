@@ -1,0 +1,54 @@
+<!--meta
+title: Documentation · Beitlab Robotics
+description: Documentation for the Beitlab Robotics Board v0.8 and Balance Robot v1: assembly, first power-on and connecting to your PC.
+layout: docs
+section: docs
+-->
+<p class="kicker"><span class="eyebrow">Documentation</span></p>
+<h1>Beitlab Robotics documentation</h1>
+<p class="lead">Everything you need to build Balance Robot v1, bring up the Robotics Board and open your first session on the robot from your PC.</p>
+
+<div class="docs-hero">
+  <a href="robot/index.html">
+    <img src="{{repo:design/body_v1/out/options/renders/3d/option_B_hip.png}}" alt="Close-up of the robot's hip: thigh on the servo clamp arm" loading="lazy">
+    <div><h3>Balance Robot v1</h3><p>The wheeled biped: layout, specifications, kinematics and the assembly guide.</p></div>
+  </a>
+  <a href="board/index.html">
+    <img src="{{repo:hardware/kicad/balance_carrier/pcb_bottom.png}}" alt="Bottom side of the Robotics Board v0.8" loading="lazy">
+    <div><h3>Robotics Board v0.8</h3><p>The Milk-V Duo S carrier: connectors, power, safety chain and bring-up.</p></div>
+  </a>
+</div>
+
+<h2 id="path">Recommended path</h2>
+<p>If this is your first robot from us, work through the guides in this order. Each one assumes the previous one passed.</p>
+<ol class="steps">
+  <li><strong>Connect the Duo S to your PC</strong>Set up the development computer, flash the Milk-V Duo S and log in over USB before it goes anywhere near the carrier. <a href="getting-started.html">First steps →</a></li>
+  <li><strong>Bring up the Robotics Board</strong>Inspect the board, then power it on stage by stage on a current-limited supply: rails, safety chain, Duo S, sensors, one motor at a time. <a href="board/bring-up.html">Bring-up →</a></li>
+  <li><strong>Assemble the robot</strong>Print the parts, fit the servos and legs, mount the electronics and wire the harnesses. <a href="robot/assembly.html">Assembly guide →</a></li>
+  <li><strong>Calibrate, then balance</strong>Commission the motors and knees against their sensors, measure the mass properties and design the gains. The <a href="{{repo:docs/book/BOOK.html}}">technical book</a> covers commissioning and tuning in depth.</li>
+</ol>
+
+<h2 id="status">Project status</h2>
+<div class="callout warn">
+  <span class="title">Prototype</span>
+  <p>The board is fully routed and frozen (v0.8, 2026-11-11), and the robot body is designed and interference-checked in CAD. Neither has been built and tested yet. Values in these guides come from the design files. Where a measurement on your hardware disagrees, trust the measurement and tell us.</p>
+</div>
+<div class="table-wrap"><table>
+  <thead><tr><th>Item</th><th>State</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>Robotics Board v0.8</td><td><span class="badge ok">Frozen</span></td><td>219 footprints, 0 DRC errors, 0 schematic mismatches. Bench qualification pending.</td></tr>
+    <tr><td>Balance Robot v1 body</td><td><span class="badge wip">Designed</span></td><td>Four-bar legs (option B). A few dimensions still to be measured on real parts before printing.</td></tr>
+    <tr><td>Control firmware core</td><td><span class="badge wip">Host-tested</span></td><td>Unit tests and closed-loop plant simulation pass. The SG2000 SDK glue is still to be written.</td></tr>
+    <tr><td>ROS 2 and simulation</td><td><span class="badge ok">Working in sim</span></td><td>URDF, RViz, mock ros2_control, Isaac Lab tasks, and policies exported to C.</td></tr>
+    <tr><td>ROS 2 bridge on hardware</td><td><span class="badge todo">Next</span></td><td>Needs the board-specific mailbox driver.</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="downloads">Downloads</h2>
+<div class="cards">
+  <a class="card" href="{{repo:hardware/releases/carrier-v0.8/docs/balance_carrier.pdf}}"><span class="tag">Board</span><h4>Schematic</h4><p>The full schematic of the frozen v0.8 release.</p><span class="size">PDF · {{size:hardware/releases/carrier-v0.8/docs/balance_carrier.pdf}}</span></a>
+  <a class="card" href="{{repo:hardware/SUBSYSTEMS.pdf}}"><span class="tag">Board</span><h4>Subsystems report</h4><p>A page per subsystem: diagram, board map, derived values, layout checks.</p><span class="size">PDF · {{size:hardware/SUBSYSTEMS.pdf}}</span></a>
+  <a class="card" href="{{repo:hardware/CIRCUITS.pdf}}"><span class="tag">Board</span><h4>Circuit drawings</h4><p>Netlist-checked subsystem schematics.</p><span class="size">PDF · {{size:hardware/CIRCUITS.pdf}}</span></a>
+  <a class="card" href="{{repo:docs/book/BOOK.html}}"><span class="tag">Reference</span><h4>Engineering a Wheeled Biped</h4><p>The technical book: from first principles to commissioning, in 17 chapters.</p><span class="size">HTML · {{size:docs/book/BOOK.html}}</span></a>
+</div>
+<p class="small muted">More files (STEP and STL models) are on the <a href="board/index.html#files">board</a> and <a href="robot/index.html#files">robot</a> pages.</p>

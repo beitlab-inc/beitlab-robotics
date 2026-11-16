@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+{{include:head.html}}
+</head>
+<body class="docs">
+{{include:header.html}}
+<div class="wrap docs-grid">
+  <aside class="docs-side" aria-label="Documentation">
+    <button class="side-toggle" type="button" aria-expanded="false" aria-controls="docs-nav">Documentation menu</button>
+    <nav id="docs-nav" class="side-nav">
+      {{sidebar}}
+      <div class="side-group">
+        <p class="side-title">Reference</p>
+        <ul>
+          <li><a href="{{repo:docs/book/BOOK.html}}">Technical book (HTML)</a></li>
+          <li><a href="{{repo:hardware/SUBSYSTEMS.pdf}}">Subsystems report (PDF)</a></li>
+          <li><a href="{{repo:hardware/CIRCUITS.pdf}}">Circuit drawings (PDF)</a></li>
+        </ul>
+      </div>
+    </nav>
+  </aside>
+  <main id="main" class="docs-main">
+    <article class="prose">
+{{content}}
+    </article>
+    {{pager}}
+  </main>
+  <aside class="docs-toc">{{toc}}</aside>
+</div>
+{{include:footer.html}}
+</body>
+</html>

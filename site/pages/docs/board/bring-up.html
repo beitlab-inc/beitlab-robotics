@@ -1,0 +1,123 @@
+<!--meta
+title: First power-on and bring-up · Robotics Board · Beitlab Robotics
+description: Staged first power-on of the Robotics Board v0.8: inspection, rails, load test, safety chain, accessory outputs, Duo S, sensors, motors, servos and battery.
+layout: docs
+section: board
+-->
+<p class="kicker"><span class="eyebrow">Robotics Board</span></p>
+<h1>First power-on and bring-up</h1>
+<p class="lead">Check out a newly assembled Robotics Board in stages, from an unpowered inspection to a battery soak. Do not start a stage until the previous one passes, and record every measured value.</p>
+<div class="meta-row"><span class="badge">Board v0.8</span><span class="badge">Bench supply, multimeter, scope</span><span class="badge wip">Expected values are from the design</span></div>
+
+<div class="callout danger">
+  <span class="title">Safety rules for every stage</span>
+  <ul>
+    <li>Use a <strong>current-limited bench supply</strong> until stage 7. Connect a LiPo only after stages 1–6 pass.</li>
+    <li>The E-stop (J10) cuts the motor drivers and VMOT. It does <strong>not</strong> cut the battery or the servo rail. Keep a physical battery disconnect within reach from the first motor test on.</li>
+    <li>Wheels stay <strong>off the ground</strong> and knees <strong>unloaded</strong> until stage 7.</li>
+    <li>Never power the Duo S from its USB-C port while the board also powers it.</li>
+    <li>Discharge C1 (220 µF) before reworking the board.</li>
+  </ul>
+</div>
+<p>The full procedure, with every measurement and the qualification record, is <code>hardware/BRINGUP.md</code> in the repository. This page follows the same stages. Where a measurement disagrees with a design value here, trust the measurement and find the cause.</p>
+
+<h2 id="stage-0">Stage 0 · Unpowered inspection</h2>
+<ol class="steps">
+  <li><strong>Polarity and orientation</strong>Under magnification, check the electrolytics C1, C17 and C18; diodes D1–D3, D5, D6 and the TVS D2 (band on VBUS); LEDs D4, D7, D8 and D16; D15 (band on VBUS_EXT); Q1–Q3; and the pin-1 mark of every IC, including U15, U16 and U17.</li>
+  <li><strong>Solder bridges</strong>On the 0.5 mm pitch parts (U4, U6, U7, U10, U14, U12's small pins) and the 0.65 mm parts (U3, U13, U8, U9).</li>
+  <li><strong>Exposed pads</strong>U8 and U9 (DRV8313), U11 (TPS54560), U16's PowerPAD and U12's PGND, VIN and SW pads must be soldered. Use X-ray if you can; otherwise watch for abnormal heating in stages 2 and 5.</li>
+  <li><strong>Resistance to GND</strong>Each rail should read a value that rises as the capacitors charge, never a steady near-0 Ω: VBUS at C1 <code>+</code>, VMOT at C40 or C46, +5V at C3, VSERVO at J20 pin 2, +3V3 at C5, +1V8 at C6.</li>
+  <li><strong>Connector polarity</strong>J1 (XT30): pin 2 <code>+</code>, pin 1 <code>−</code>, marked on the silkscreen. Check it against your battery lead with a meter. J24 and J25 likewise: pin 2 <code>+</code>.</li>
+  <li><strong>JP1</strong>On the bottom side, the factory bridge must join pads 1–2: J24 follows the E-stop, the safe default.</li>
+</ol>
+
+<h2 id="stage-1">Stage 1 · First power, board only</h2>
+<p>No Duo S, motors, servos, sensor cables or E-stop. Supply on J1 at <strong>12.0 V with a 100 mA limit</strong>, raised slowly from 0 V. The 5 V buck starts at about 6.5 V and the 6 V buck at about 7.4 V. At 12 V the supply should settle at a few mA to a few tens of mA; if it sits in current limit, switch off and look for a short.</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>Rail</th><th>Expected</th><th>Where</th></tr></thead>
+  <tbody>
+    <tr><td><code>VBUS</code></td><td>Supply voltage, minus a small drop across F1 and Q1</td><td>C1 <code>+</code>, TP5</td></tr>
+    <tr><td><code>VMOT</code></td><td>0 V: the latch is held clear at startup; arming is explicit</td><td>C40, TP6</td></tr>
+    <tr><td><code>+5V</code></td><td>5.32 V</td><td>C3, TP8</td></tr>
+    <tr><td><code>VSERVO</code></td><td>6.00 V</td><td>J20 pin 2, TP7</td></tr>
+    <tr><td><code>+3V3</code> / <code>+1V8</code></td><td>3.3 V / 1.8 V</td><td>C5 / C6</td></tr>
+  </tbody>
+</table></div>
+<p>Green D4 is lit; yellow D7 (EN) and red D8 (FLT) are dark. With nothing driving them, <code>MOT_EN</code> (TP2), <code>WDT_OK</code> (TP1) and <code>ESTOP_RUN</code> (TP9) read low and <code>DRV_NFAULT</code> (TP10) reads 3.3 V. With a jumper or NC switch on J10, <code>ESTOP_OK</code> reads about 3.0 V. Repeat at 16.8 V (a full 4S pack): nothing may change.</p>
+
+<h2 id="stage-2">Stage 2 · Rail load test</h2>
+<p>Still no Duo S. Load +5V to 1.5 A, then VSERVO to 4 A, then both, with the supply limit raised to 6 A. Each rail must stay within ±3 %, and the switch nodes must show no oscillation beyond light-load PFM. Step VSERVO to 7 A for a few seconds (two stalled servos). After 5 minutes, check U11, U12, D5, L1 and L2: stop if any part rises more than about 40 °C above ambient.</p>
+
+<h2 id="stage-3">Stage 3 · Safety chain without the Duo S</h2>
+<p>Inject the Duo S signals into the empty sockets with header pins. <strong>J9 is the 1.8 V header: use 1.8 V logic there.</strong> J8 is 3.3 V.</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>Signal</th><th>Socket pin</th><th>Logic</th></tr></thead>
+  <tbody>
+    <tr><td><code>WDT_KICK</code></td><td>J9-20 (Duo J4-46)</td><td>1.8 V</td></tr>
+    <tr><td><code>ESTOP_ARM</code></td><td>J9-10 (J4-36)</td><td>1.8 V</td></tr>
+    <tr><td><code>DRV_NSLEEP</code> / <code>DRV_NRESET</code></td><td>J9-13 / J9-15</td><td>1.8 V</td></tr>
+    <tr><td><code>MOT_EN_REQ</code></td><td>J8-12 (Duo J3-12)</td><td>3.3 V</td></tr>
+    <tr><td>GND</td><td>J8-6, J9-5</td><td></td></tr>
+  </tbody>
+</table></div>
+<ol class="steps">
+  <li><strong>Startup clear</strong>With the loop closed before power-up, VMOT stays off with no firmware. An ARM edge with <code>MOT_EN_REQ</code> low leaves <code>ESTOP_RUN</code> and VMOT at 0 V.</li>
+  <li><strong>Arm</strong><code>MOT_EN_REQ</code> high, one rising <code>ESTOP_ARM</code> edge: <code>ESTOP_RUN</code> goes high and VMOT ramps to VBUS in under 1 ms.</li>
+  <li><strong>Watchdog</strong>Without kicks, <code>MOT_EN</code> stays low. A 200 Hz, 1.8 V square wave on <code>WDT_KICK</code> brings <code>WDT_OK</code> and <code>MOT_EN</code> high and lights D7. Stop it at either level: <code>MOT_EN</code> drops after about 10 ms. Record that delay.</li>
+  <li><strong>E-stop</strong>Open the loop while kicking: <code>MOT_EN</code> drops at once and Q2's gate turns off in about 2 ms. Record VMOT's decay.</li>
+  <li><strong>No re-arm</strong>Close the loop again, bounce it: nothing re-enables until a new ARM edge with <code>MOT_EN_REQ</code> high. Unplugging J10 must also drop everything.</li>
+</ol>
+<div class="callout warn"><span class="title">Gate</span><p>Do not continue to the motor stages until every row of stage 3 passes.</p></div>
+
+<h2 id="stage-3b">Stage 3b · Accessory outputs</h2>
+<p>With the latch clear, J24 reads 0 V and J25 about 5.3 V. Arm the latch: J24 rises to VBUS with a 1 V/ms soft start, and +5V must not dip. Check the J24 current limit (2.33–2.68 A, auto-retry), over-voltage shutdown near 20.1 V (never above 22 V), and the J25 limit (475–565 mA) and back-feed blocking. D16 lights on every fault.</p>
+
+<h2 id="stage-4">Stage 4 · Duo S installed</h2>
+<p>Check the mechanical fit first: RJ45 and USB-A in the notch, the USB-C plug and cable bend under the lower extension, and the boot switch, recovery button and microSD slot reachable. Fit the Duo S on its four M2.5 standoffs. Power at 12 V with a 1 A limit; VSYS should stay near 4.9–5.0 V while Linux boots. Log in as in <a href="../getting-started.html#on-the-board">First steps</a>.</p>
+<p>For bring-up only, enable I²C4 and SPI3 in a Linux test device tree. With no display on J23, an I²C scan shows:</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>Address</th><th>Device</th><th>Identity check</th></tr></thead>
+  <tbody>
+    <tr><td><code>0x48</code></td><td>ADS1115 rail monitor</td><td>Read the config register, then the four channels below</td></tr>
+    <tr><td><code>0x68</code></td><td>BMI323 IMU</td><td>Register 0x00, after the two dummy bytes: low byte <code>0x43</code></td></tr>
+  </tbody>
+</table></div>
+<p>Read the ADS1115 at ±2.048 V full scale: volts = code × 2.048 / 32768 × gain. Compare each value with your meter.</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>Input</th><th>Rail</th><th class="num">Gain</th><th>At the input, nominal rail</th></tr></thead>
+  <tbody>
+    <tr><td>AIN0</td><td><code>VBUS</code></td><td class="num">11.0</td><td>about 1.09 V at 12 V</td></tr>
+    <tr><td>AIN1</td><td><code>VSERVO</code></td><td class="num">5.7</td><td>about 1.05 V</td></tr>
+    <tr><td>AIN2</td><td><code>+5V</code></td><td class="num">5.7</td><td>about 0.93 V</td></tr>
+    <tr><td>AIN3</td><td><code>VMOT</code></td><td class="num">11.0</td><td>0 V with the E-stop open; about 1.09 V at 12 V when armed</td></tr>
+  </tbody>
+</table></div>
+<p>The BMI323 powers up with both sensors off. A starting configuration (16-bit registers, low byte first):</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>Register</th><th>Value</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td><code>ACC_CONF</code> 0x20</td><td><code>0x709B</code></td><td>High performance, ±4 g, 800 Hz</td></tr>
+    <tr><td><code>GYR_CONF</code> 0x21</td><td><code>0x70CB</code></td><td>High performance, ±2000 °/s, 800 Hz</td></tr>
+    <tr><td><code>IO_INT_CTRL</code> 0x38</td><td><code>0x0005</code></td><td>INT1 on, push-pull, active high</td></tr>
+    <tr><td><code>INT_CONF</code> 0x39</td><td><code>0x0000</code></td><td>Not latched: a short pulse per sample</td></tr>
+    <tr><td><code>INT_MAP2</code> 0x3B</td><td><code>0x0100</code></td><td>Gyro data-ready to INT1</td></tr>
+  </tbody>
+</table></div>
+<p>Read them back and check <code>ERR_REG</code> (0x01) is 0. With the board flat, about +1 g appears on the axis pointing up, and INT1 (J8-16) pulses at 800 Hz.</p>
+
+<h2 id="stage-5">Stage 5 · One driver, one motor</h2>
+<p>One GM4108H on J2 with its AS5048A on J15, wheel lifted, supply at 12 V with a <strong>0.5 A</strong> limit.</p>
+<ol class="steps">
+  <li><strong>Rotor sensor</strong>SPI3 mode 1, 16-bit frames, 1 MHz first. Read DIAG (<code>0x7FFD</code>, then any frame): OCF set, COF and COMP clear. Then <code>0xFFFF</code> frames must pass parity and change smoothly through a full turn. Raise to the 2–4 MHz you will run, with all four cables attached; the error count must stay at zero.</li>
+  <li><strong>Wake the drivers</strong>Arm the latch as in stage 3, set nSLEEP high, wait, then nRESET high. <code>DRV_NFAULT</code> stays high and D8 dark.</li>
+  <li><strong>Commission FOC</strong>Check the phase order (positive <code>uq</code> must increase counts; swap two phases if not), align and record <code>zero_electrical_angle</code>, measure phase resistance and back-EMF, and only then raise <code>current_limit</code> toward 1.5 A.</li>
+  <li><strong>Faults</strong>Watch the DRV8313 temperature and D8. After an over-current latch, pulse nRESET low while disarmed: a latched driver ignores EN.</li>
+  <li><strong>Second motor</strong>Repeat on J3 with its sensor on J16.</li>
+</ol>
+
+<h2 id="stage-6">Stage 6 · Hip servos and knee sensors</h2>
+<p>One DS3240 on J20 or J21, its knee AS5048A on J17 (left) or J18 (right), the leg free to move. Check the knee sensor as in stage 5; with all four sensors connected, each chip select must give clean frames. Start the servo at mid pulse and sweep slowly: the knee angle must follow monotonically with DIAG good across the whole travel. Watch VSERVO on the scope during fast moves, and calibrate <code>knee_zero</code>, <code>knee_sign</code> and the servo map against the measured knee angle.</p>
+
+<h2 id="stage-7">Stage 7 · Battery and thermal soak</h2>
+<p>Expect a spark at the first battery connection: use an anti-spark lead, a pre-charge resistor or a battery switch closed last. Run both motors at a moderate held torque with both servos holding a crouch for 10 minutes. Log VBUS, VMOT, VSERVO and +5V, and check the DRV8313s, the bucks, D5, Q1, Q2 and F1. Capture peak VBUS and VMOT during deceleration and E-stop. Only then does the robot go on the floor.</p>
+<div class="callout ok"><span class="title">Done</span><p>A board that passes stage 7 is ready for <a href="../robot/assembly.html">assembly into the robot</a> and supervised balancing.</p></div>
