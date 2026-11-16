@@ -33,7 +33,7 @@ copy. The build puts the file in `build/site/files/`. Pages refer to them like t
 
 So after `make body`, `make renders`, `make videos` or a board rebuild, the next site build
 picks up the new outputs. The board schematic comes from the frozen release
-(`hardware/releases/carrier-v0.8/`); when a new revision is frozen, update that path in
+(`hardware/releases/carrier-v0.9/`); when a new revision is frozen, update that path in
 `pages/docs/board/index.html`. Boards are sold only by Beitlab Robotics, so the site
 deliberately publishes no fabrication files (Gerbers, BOM, placement or assembly drawings).
 
