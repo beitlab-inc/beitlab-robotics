@@ -204,6 +204,7 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .orbit.is-ready .orbit-stage { position: absolute; inset: 0; }
 .orbit.is-ready .orbit-stage img { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); margin: 0; }
 .orbit.is-ready .orbit-stage canvas { display: block; width: 100%; height: 100%; }
+.orbit.is-3d .orbit-stage #orbit-canvas { display: none; }
 .orbit.is-ready .orbit-beats { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
 .orbit.is-ready .orbit-beat {
   position: absolute; inset: 0; opacity: 0; transition: opacity .5s ease;

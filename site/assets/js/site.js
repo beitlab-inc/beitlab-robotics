@@ -161,10 +161,15 @@
       ctx.drawImage(img, x, y, dw, dh);
       shown = i;
     }
+    var live = null; // the 3D robot once it is running; otherwise the pre-rendered frames paint
     function update() {
       var p = progress();
-      var i = Math.round(p * (count - 1));
-      if (i !== shown || canvas.width === 0) paint(i);
+      if (live) {
+        live.setProgress(p);
+      } else {
+        var i = Math.round(p * (count - 1));
+        if (i !== shown || canvas.width === 0) paint(i);
+      }
       var active = 0;
       beats.forEach(function (b, i) {
         if (p >= parseFloat(b.dataset.start)) active = i;
@@ -176,20 +181,24 @@
         if (on) b.removeAttribute("inert"); else b.setAttribute("inert", "");
       });
     }
-    for (var n = 0; n < count; n++) {
-      (function (n) {
-        var img = new Image();
-        img.onload = function () {
-          frames[n] = img;
-          if (!orbit.classList.contains("is-ready") && n === 0) {
-            orbit.classList.add("is-ready");
-            update();
-          } else if (n === shown || shown < 0) {
-            paint(Math.max(shown, 0));
-          }
-        };
-        img.src = src + pad(n) + ".png";
-      })(n);
+    // Fallback: the 60 pre-rendered CAD frames, for browsers without WebGL.
+    function startFrames() {
+      orbit.classList.remove("is-3d");
+      for (var n = 0; n < count; n++) {
+        (function (n) {
+          var img = new Image();
+          img.onload = function () {
+            frames[n] = img;
+            if (!orbit.classList.contains("is-ready") && n === 0) {
+              orbit.classList.add("is-ready");
+              update();
+            } else if (n === shown || shown < 0) {
+              paint(Math.max(shown, 0));
+            }
+          };
+          img.src = src + pad(n) + ".png";
+        })(n);
+      }
     }
     var ticking = false;
     function onScroll() {
@@ -198,7 +207,54 @@
       requestAnimationFrame(function () { ticking = false; update(); });
     }
     window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", function () { shown = -1; onScroll(); });
+    window.addEventListener("resize", function () {
+      shown = -1;
+      if (live) live.resize();
+      onScroll();
+    });
+
+    // Preferred: the live robot. The head follows the pointer; scroll turns the camera around it
+    // while the legs squat. Anything that goes wrong drops back to the frames.
+    function start3d() {
+      var base = canvas.dataset.robot;
+      var gl = document.createElement("canvas");
+      gl.id = "orbit-gl";
+      gl.setAttribute("aria-hidden", "true");
+      canvas.parentNode.insertBefore(gl, canvas);
+      orbit.classList.add("is-3d");
+      function fail() {
+        live = null;
+        if (gl.parentNode) gl.parentNode.removeChild(gl);
+        startFrames();
+        update();
+      }
+      // The canvas must be laid out before the module measures it.
+      orbit.classList.add("is-ready");
+      var url = new URL(canvas.dataset.module, document.baseURI).href;
+      var load;
+      try { load = new Function("u", "return import(u)"); } catch (e) { load = null; }
+      (load ? load(url) : Promise.reject(new Error("no dynamic import"))).then(function (mod) {
+        return mod.start({
+          canvas: gl,
+          base: new URL(base, document.baseURI).href,
+          progress: progress,
+          layout: function () { return { top: textBottom(), bottom: 76 }; },
+          onLost: fail
+        });
+      }).then(function (robot) {
+        live = robot;
+        update();
+      }).catch(function (err) {
+        if (window.console) console.warn("3D robot unavailable, using frames", err);
+        orbit.classList.remove("is-ready");
+        fail();
+      });
+    }
+    if (canvas.dataset.robot && canvas.dataset.module && !(navigator.connection && navigator.connection.saveData)) {
+      start3d();
+    } else {
+      startFrames();
+    }
     update();
   }
 })();

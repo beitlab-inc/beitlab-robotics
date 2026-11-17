@@ -44,8 +44,15 @@ The video stills in `assets/img/` (`hero-robot.jpg`, `promo-poster.jpg`, `assemb
 are cut from the videos in `assets/video/`: refresh them with `python3 tools/site/build_site.py --posters`
 (needs opencv).
 
-The homepage scroll is a 60-frame orbit in `assets/orbit/` (`f00.png`–`f59.png`), the same
-CAD scene as `make renders`, with the plate and floor removed so the robot sits on the page.
+The homepage robot is live: `assets/js/robot3d.js` poses the URDF with three.js (vendored in
+`assets/js/vendor/`, no CDN). The head pan and tilt servos follow the pointer, and scrolling turns
+the camera once around the robot while the four-bar legs squat twice. The model is
+`assets/robot/robot.json` and `robot.bin` (2 MB), packed from the ROS 2 description package with
+`python3 tools/site/robot_model.py` (numpy only; run it after the URDF or its meshes change).
+
+The 60-frame orbit in `assets/orbit/` (`f00.png`–`f59.png`) is the fallback for browsers without
+WebGL or with Save-Data on, and the still shown with reduced motion. It is the same CAD scene as
+`make renders`, with the plate and floor removed so the robot sits on the page.
 Refresh it with the VTK environment `make renders` uses, after that scene exists:
 
 ```sh
