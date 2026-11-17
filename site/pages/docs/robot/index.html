@@ -1,31 +1,33 @@
 <!--meta
 title: Balance Robot v1 · Beitlab Robotics
-description: Balance Robot v1, a two-wheeled balancing biped with four-bar legs, direct-drive GM4108H wheel motors, DS3240 hip servos and the Robotics Board v0.8.
+description: Balance Robot v1, a two-wheeled balancing biped with four-bar legs, direct-drive GM4108H wheel motors, DS3240 hip servos, a pan/tilt visor head, an ESP32-S3 AI camera and the Robotics Board v0.11.
 layout: docs
 section: robot
 -->
 <p class="kicker"><span class="eyebrow">Balance Robot v1</span></p>
 <h1>Balance Robot v1</h1>
-<p class="lead">A two-wheeled balancing biped with adjustable legs. One servo per leg sets the height through a four-bar linkage that keeps the wheel under the hip, and two direct-drive brushless motors keep the robot upright.</p>
+<p class="lead">A two-wheeled balancing biped with adjustable legs. One servo per leg sets the height through a four-bar linkage that keeps the wheel under the hip, and two direct-drive brushless motors keep the robot upright. A visor head turns and tilts on two servos, and an ESP32-S3 AI camera looks out from the chest.</p>
 <div class="meta-row"><span class="badge ok">CAD designed and checked</span><span class="badge wip">First print pending</span><span class="badge">Leg option B</span></div>
 
 <figure>
   <img src="{{repo:design/body_v1/out/options/renders/3d/option_B_views.png}}" alt="Labelled front, rear, side and cutaway views of Balance Robot v1" loading="lazy">
-  <figcaption>Option B, the chosen leg: front three-quarter view at hip 35°, rear, right side, and a cutaway with the cover and left half removed.</figcaption>
+  <figcaption>Option B, the chosen leg, with the head and the chest camera: front three-quarter view at hip 35°, rear, right side, and a cutaway with the cover and left half removed.</figcaption>
 </figure>
 
 <h2 id="specs">Specifications</h2>
 <dl class="specs">
-  <div><dt>Height</dt><dd>195–259 mm<small>to the cover, by crouch; E-stop +12 mm</small></dd></div>
+  <div><dt>Height</dt><dd>294–358 mm<small>to the head, by crouch; 195–259 mm to the cover</small></dd></div>
   <div><dt>Body</dt><dd>116 × 84 × 124 mm<small>four 3D-printed sections</small></dd></div>
   <div><dt>Track</dt><dd>196 mm<small>wheel centre to centre</small></dd></div>
   <div><dt>Wheels</dt><dd>Ø 84.8 mm<small>TPU tread on a printed rim</small></dd></div>
-  <div><dt>Pitching body</dt><dd>1.19 kg<small>without wheels, from CAD</small></dd></div>
+  <div><dt>Pitching body</dt><dd>1.43 kg<small>without wheels, with the head, from CAD</small></dd></div>
   <div><dt>Wheel motors</dt><dd>2 × GM4108H-120T<small>direct drive, ≈ 0.15 N·m each</small></dd></div>
   <div><dt>Leg actuators</dt><dd>2 × DS3240<small>40 kg·cm, at the hips</small></dd></div>
   <div><dt>Battery</dt><dd>4S LiPo<small>75 × 37 × 38 mm default pack</small></dd></div>
-  <div><dt>Computer</dt><dd>Milk-V Duo S<small>on the Robotics Board v0.8</small></dd></div>
+  <div><dt>Computer</dt><dd>Milk-V Duo S<small>on the Robotics Board v0.11</small></dd></div>
   <div><dt>Hip range</dt><dd>15–55°<small>knee 30–110°</small></dd></div>
+  <div><dt>Head</dt><dd>Pan ±90°, tilt ±25°<small>DS3218-class pan, MG90S tilt</small></dd></div>
+  <div><dt>AI camera</dt><dd>DFRobot DFR1154<small>ESP32-S3, 160° lens, in the chest</small></dd></div>
 </dl>
 <p class="small muted">Masses are design values from the CAD with estimates for bought parts. Replace them with weighed values before designing real gains.</p>
 
@@ -37,10 +39,11 @@ section: robot
     <tr><td>0–45</td><td><strong>Base</strong> and battery door</td><td>The 4S pack, loaded from the rear on two velcro straps; two external pivot bosses for the legs' bones</td></tr>
     <tr><td>45–75</td><td><strong>Frame</strong></td><td>Both DS3240 servos on their sides, back to back, screwed to the side walls from outside</td></tr>
     <tr><td>75–78</td><td><strong>Deck</strong></td><td>Bosses for the Duo S and the Robotics Board, a slot for the servo leads</td></tr>
-    <tr><td>78–124</td><td><strong>Cover</strong></td><td>E-stop, openings for the power connectors and the Duo S's RJ45 and USB-A, vents, six M3 accessory mounts</td></tr>
+    <tr><td>78–124</td><td><strong>Cover</strong></td><td>E-stop, openings for the power connectors and the Duo S's RJ45 and USB-A, a snap-in ON/OFF rocker at the front left, vents, six M3 accessory mounts; the chest camera on its front</td></tr>
+    <tr><td>124–222</td><td><strong>Head</strong></td><td>The pan servo in its shroud on the top mounts, the neck with the tilt servo, and the visor: shell, cap and two eye bezels</td></tr>
   </tbody>
 </table></div>
-<p>The board sits turned 180°: its power entry and the Duo S ports face the rear, and the motor, servo, sensor, E-stop and console connectors face the front. The cover has six M3 accessory points (four on the front face, two on top) with captive nuts, for a sensor, camera, bumper or handle.</p>
+<p>The board sits turned 180°: its power entry and the Duo S ports face the rear, and the motor, servo, sensor, E-stop and console connectors face the front. The cover has six M3 accessory points with captive nuts: the two on top carry the head, and the four on the front carry the chest camera.</p>
 <figure>
   <img src="{{repo:design/body_v1/out/renders/exploded.png}}" alt="Exploded view of the body: base, frame, deck and cover" loading="lazy">
   <figcaption>Exploded body: base with battery, frame with servos, deck, the Duo S and board, and the cover.</figcaption>
@@ -66,14 +69,21 @@ section: robot
 </figure>
 <!--/optional-->
 
+<h2 id="head">Head and AI camera</h2>
+<p>The head is a 116 × 62 × 44 mm visor with a black inset face and two ringed eyes. A standard 25T servo, the hips' type, turns it ±90° from a black shroud on the cover. An MG90S inside tilts it ±25° and only turns it: an 8 mm pin on the other side carries the left side. The DFRobot DFR1154 ESP32-S3 AI camera, with a 160° lens, IR LEDs, a microphone and a speaker amplifier, sits behind a grille panel on the chest. On board v0.11 the pan and tilt leads plug into J27 (AUX1) and J28 (AUX2). A separate head board, fed from the VBUS and 5 V accessory outputs and talking on I²C, remains the option when the head must track on its own. Both are set out in <a href="{{repo:hardware/HEAD_ELECTRONICS.md}}">HEAD_ELECTRONICS.md</a>.</p>
+<figure>
+  <img src="{{repo:design/body_v1/out/head/renders/head_views.png}}" alt="The visor head on its pan/tilt neck and the DFR1154 chest camera, in several views" loading="lazy">
+  <figcaption>The head and the chest camera: front, the neck and tilt servo with the cap off, panned and tilted, the camera behind its panel, and side and rear views. Every view is checked for collisions over the whole pan/tilt range.</figcaption>
+</figure>
+
 <h2 id="mass">Mass and centre of mass</h2>
-<p>The centre of mass sits <em>below</em> the hip, which needs less wheel torque but falls faster. The LQR delay margin is 1–2 ticks of 2.5 ms.</p>
+<p>With the head, the centre of mass sits just <em>below</em> the hip and slightly ahead of the axle. The head raises it by 22–25 mm and about doubles the pitch inertia, so the robot falls more slowly: the LQR delay margin is 2–3 ticks of 2.5 ms.</p>
 <div class="table-wrap"><table>
   <thead><tr><th>Hip / knee</th><th class="num">CoM above axle</th><th class="num">CoM relative to hip</th></tr></thead>
   <tbody>
-    <tr><td>15° / 30° (tall)</td><td class="num">108 mm</td><td class="num">47 mm below</td></tr>
-    <tr><td>35° / 70°</td><td class="num">91 mm</td><td class="num">40 mm below</td></tr>
-    <tr><td>55° / 110° (crouch)</td><td class="num">62 mm</td><td class="num">29 mm below</td></tr>
+    <tr><td>15° / 30° (tall)</td><td class="num">133 mm</td><td class="num">22 mm below</td></tr>
+    <tr><td>35° / 70°</td><td class="num">115 mm</td><td class="num">16 mm below</td></tr>
+    <tr><td>55° / 110° (crouch)</td><td class="num">83 mm</td><td class="num">7 mm below</td></tr>
   </tbody>
 </table></div>
 
@@ -90,8 +100,8 @@ section: robot
 
 <h2 id="files">CAD files</h2>
 <div class="cards">
-  <a class="card" href="{{repo:design/body_v1/out/options/option_B/robot_option_B.step}}"><span class="tag">STEP</span><h4>Whole robot</h4><p>Option B at hip 30°, without the board. Opens in Onshape and FreeCAD.</p><span class="size">STEP · {{size:design/body_v1/out/options/option_B/robot_option_B.step}}</span></a>
-  <!--optional--><a class="card" href="{{repo:design/body_v1/out/options/option_B/robot_option_B_mounted.step}}"><span class="tag">STEP</span><h4>Fully mounted</h4><p>The same, with all 134 screws, inserts, bearings, washers, standoffs and magnets.</p><span class="size">STEP · {{size:design/body_v1/out/options/option_B/robot_option_B_mounted.step}}</span></a><!--/optional-->
+  <a class="card" href="{{repo:design/body_v1/out/options/option_B/robot_option_B.step}}"><span class="tag">STEP</span><h4>Whole robot</h4><p>Option B at hip 30° with the head and chest camera, without the board. Opens in Onshape and FreeCAD.</p><span class="size">STEP · {{size:design/body_v1/out/options/option_B/robot_option_B.step}}</span></a>
+  <!--optional--><a class="card" href="{{repo:design/body_v1/out/options/option_B/robot_option_B_mounted.step}}"><span class="tag">STEP</span><h4>Fully mounted</h4><p>The same, with all 178 screws, inserts, nuts, bearings, washers, standoffs and magnets.</p><span class="size">STEP · {{size:design/body_v1/out/options/option_B/robot_option_B_mounted.step}}</span></a><!--/optional-->
   <a class="card" href="{{repo:design/body_v1/out/options/option_B/hardware_bom.md}}"><span class="tag">BOM</span><h4>Hardware list</h4><p>Every bought part in the mounted model, counted and located.</p><span class="size">Text · {{size:design/body_v1/out/options/option_B/hardware_bom.md}}</span></a>
   <a class="card" href="assembly.html#print"><span class="tag">STL</span><h4>Printed parts</h4><p>Every part in print orientation, with quantities and notes.</p></a>
 </div>

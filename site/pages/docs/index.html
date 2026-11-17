@@ -1,6 +1,6 @@
 <!--meta
 title: Documentation · Beitlab Robotics
-description: Documentation for the Beitlab Robotics Board v0.8 and Balance Robot v1: assembly, first power-on and connecting to your PC.
+description: Documentation for the Beitlab Robotics Board v0.11 and Balance Robot v1: assembly, first power-on and connecting to your PC.
 layout: docs
 section: docs
 -->
@@ -14,8 +14,8 @@ section: docs
     <div><h3>Balance Robot v1</h3><p>The wheeled biped: layout, specifications, kinematics and the assembly guide.</p></div>
   </a>
   <a href="board/index.html">
-    <img src="{{repo:hardware/kicad/balance_carrier/pcb_bottom.png}}" alt="Bottom side of the Robotics Board v0.8" loading="lazy">
-    <div><h3>Robotics Board v0.8</h3><p>The Milk-V Duo S carrier: connectors, power, safety chain and bring-up.</p></div>
+    <img src="{{repo:hardware/kicad/balance_carrier/pcb_bottom.png}}" alt="Bottom side of the Robotics Board v0.11" loading="lazy">
+    <div><h3>Robotics Board v0.11</h3><p>The Milk-V Duo S carrier: connectors, power, safety chain and bring-up.</p></div>
   </a>
 </div>
 
@@ -31,12 +31,12 @@ section: docs
 <h2 id="status">Project status</h2>
 <div class="callout warn">
   <span class="title">Prototype</span>
-  <p>The board is fully routed and frozen (v0.8, 2026-11-11), and the robot body is designed and interference-checked in CAD. Neither has been built and tested yet. Values in these guides come from the design files. Where a measurement on your hardware disagrees, trust the measurement and tell us.</p>
+  <p>The board is fully routed (v0.11 working revision; v0.10 frozen 2026-11-16), and the robot body is designed and interference-checked in CAD. Neither has been built and tested yet. Values in these guides come from the design files. Where a measurement on your hardware disagrees, trust the measurement and tell us.</p>
 </div>
 <div class="table-wrap"><table>
   <thead><tr><th>Item</th><th>State</th><th>Notes</th></tr></thead>
   <tbody>
-    <tr><td>Robotics Board v0.8</td><td><span class="badge ok">Frozen</span></td><td>219 footprints, 0 DRC errors, 0 schematic mismatches. Bench qualification pending.</td></tr>
+    <tr><td>Robotics Board v0.11</td><td><span class="badge wip">Working</span></td><td>239 footprints, 0 DRC errors, 0 schematic mismatches. The ON/OFF master switch is a rocker in the cover, on J26, and J27/J28 are aux servo ports for the head. The last frozen release is v0.10, with the switch on the board. Bench qualification pending.</td></tr>
     <tr><td>Balance Robot v1 body</td><td><span class="badge wip">Designed</span></td><td>Four-bar legs (option B). A few dimensions still to be measured on real parts before printing.</td></tr>
     <tr><td>Control firmware core</td><td><span class="badge wip">Host-tested</span></td><td>Unit tests and closed-loop plant simulation pass. The SG2000 SDK glue is still to be written.</td></tr>
     <tr><td>ROS 2 and simulation</td><td><span class="badge ok">Working in sim</span></td><td>URDF, RViz, mock ros2_control, Isaac Lab tasks, and policies exported to C.</td></tr>
@@ -46,7 +46,8 @@ section: docs
 
 <h2 id="downloads">Downloads</h2>
 <div class="cards">
-  <a class="card" href="{{repo:hardware/releases/carrier-v0.9/docs/balance_carrier.pdf}}"><span class="tag">Board</span><h4>Schematic</h4><p>The full schematic of the frozen v0.9 release.</p><span class="size">PDF · {{size:hardware/releases/carrier-v0.9/docs/balance_carrier.pdf}}</span></a>
+  <a class="card" href="{{repo:hardware/kicad/balance_carrier/balance_carrier.pdf}}"><span class="tag">Board</span><h4>Schematic</h4><p>The full schematic of the current v0.11 working revision.</p><span class="size">PDF · {{size:hardware/kicad/balance_carrier/balance_carrier.pdf}}</span></a>
+  <a class="card" href="{{repo:hardware/releases/carrier-v0.10/docs/balance_carrier.pdf}}"><span class="tag">Board</span><h4>Schematic, frozen v0.10</h4><p>The last frozen release, with the switch on the board.</p><span class="size">PDF · {{size:hardware/releases/carrier-v0.10/docs/balance_carrier.pdf}}</span></a>
   <a class="card" href="{{repo:hardware/SUBSYSTEMS.pdf}}"><span class="tag">Board</span><h4>Subsystems report</h4><p>A page per subsystem: diagram, board map, derived values, layout checks.</p><span class="size">PDF · {{size:hardware/SUBSYSTEMS.pdf}}</span></a>
   <a class="card" href="{{repo:hardware/CIRCUITS.pdf}}"><span class="tag">Board</span><h4>Circuit drawings</h4><p>Netlist-checked subsystem schematics.</p><span class="size">PDF · {{size:hardware/CIRCUITS.pdf}}</span></a>
   <a class="card" href="{{repo:docs/book/BOOK.html}}"><span class="tag">Reference</span><h4>Engineering a Wheeled Biped</h4><p>The technical book: from first principles to commissioning, in 17 chapters.</p><span class="size">HTML · {{size:docs/book/BOOK.html}}</span></a>

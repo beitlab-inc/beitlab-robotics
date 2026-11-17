@@ -93,7 +93,8 @@ def main() -> None:
         az = rv.FRONT["az"] + 360.0 * i / N
         # Same rig as render_v1's turntable, pulled in just enough that the
         # whole robot stays in frame on a 4:3 plate.
-        orbit.camera((0.0, 10.0, 120.0), az, 18.0, dist=920.0, angle=22.0)
+        # 2026-11-16: aimed higher and pulled back for the head (head top ~334 mm at hip 35).
+        orbit.camera((0.0, 10.0, 165.0), az, 18.0, dist=1080.0, angle=22.0)
         frame = lift_off_plate(orbit.snap())
         frame.save(OUT / name, optimize=True)
         print(name, flush=True)

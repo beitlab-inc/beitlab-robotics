@@ -32,10 +32,13 @@ copy. The build puts the file in `build/site/files/`. Pages refer to them like t
   `user.github.io/<repo>/` and on a custom domain.
 
 So after `make body`, `make renders`, `make videos` or a board rebuild, the next site build
-picks up the new outputs. The board schematic comes from the frozen release
-(`hardware/releases/carrier-v0.9/`); when a new revision is frozen, update that path in
-`pages/docs/board/index.html`. Boards are sold only by Beitlab Robotics, so the site
-deliberately publishes no fabrication files (Gerbers, BOM, placement or assembly drawings).
+picks up the new outputs. The working schematic, subsystem report, circuit drawings and
+board renders come from the current revision (`hardware/kicad/balance_carrier/`,
+`hardware/SUBSYSTEMS.pdf`, `hardware/CIRCUITS.pdf`). The frozen schematic stays at
+`hardware/releases/carrier-v0.10/` until a newer revision is frozen; when that happens,
+update that path in `pages/docs/board/index.html`. Boards are sold only by Beitlab Robotics,
+so the site deliberately publishes no fabrication files (Gerbers, BOM, placement or
+assembly drawings).
 
 The video stills in `assets/img/` (`hero-robot.jpg`, `promo-poster.jpg`, `assembly-poster.jpg`)
 are cut from the videos in `assets/video/`: refresh them with `python3 tools/site/build_site.py --posters`
@@ -64,5 +67,5 @@ and commit it with the change. The build fails if a copy is missing, so a new re
    `https://<domain>` so the canonical links, `sitemap.xml` and the 404 page use it. With an
    Actions deploy no `CNAME` file is needed.
 
-The built site is about 96 MB, mostly the two videos (64 MB) and the STEP models. GitHub Pages
+The built site is about 125 MB, mostly the two videos (78 MB) and the STEP models. GitHub Pages
 allows 1 GB per site and 100 MB per file.

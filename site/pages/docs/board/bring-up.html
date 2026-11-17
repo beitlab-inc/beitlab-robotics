@@ -1,13 +1,13 @@
 <!--meta
 title: First power-on and bring-up · Robotics Board · Beitlab Robotics
-description: Staged first power-on of the Robotics Board v0.8: inspection, rails, load test, safety chain, accessory outputs, Duo S, sensors, motors, servos and battery.
+description: Staged first power-on of the Robotics Board v0.11: inspection, rails, load test, safety chain, accessory outputs, Duo S, sensors, motors, servos and battery.
 layout: docs
 section: board
 -->
 <p class="kicker"><span class="eyebrow">Robotics Board</span></p>
 <h1>First power-on and bring-up</h1>
 <p class="lead">Check out a newly assembled Robotics Board in stages, from an unpowered inspection to a battery soak. Do not start a stage until the previous one passes, and record every measured value.</p>
-<div class="meta-row"><span class="badge">Board v0.8</span><span class="badge">Bench supply, multimeter, scope</span><span class="badge wip">Expected values are from the design</span></div>
+<div class="meta-row"><span class="badge">Board v0.11</span><span class="badge">Bench supply, multimeter, scope</span><span class="badge wip">Expected values are from the design</span></div>
 
 <div class="callout danger">
   <span class="title">Safety rules for every stage</span>
@@ -17,22 +17,24 @@ section: board
     <li>Wheels stay <strong>off the ground</strong> and knees <strong>unloaded</strong> until stage 7.</li>
     <li>Never power the Duo S from its USB-C port while the board also powers it.</li>
     <li>Discharge C1 (220 µF) before reworking the board.</li>
+    <li>The ON/OFF switch (v0.11: the rocker on J26; v0.10: SW1) is not an emergency stop. Shut Ubuntu down and wait for it to halt before moving it to OFF: OFF cuts power to the Duo S at once.</li>
   </ul>
 </div>
 <p>The full procedure, with every measurement and the qualification record, is <code>hardware/BRINGUP.md</code> in the repository. This page follows the same stages. Where a measurement disagrees with a design value here, trust the measurement and find the cause.</p>
 
 <h2 id="stage-0">Stage 0 · Unpowered inspection</h2>
 <ol class="steps">
-  <li><strong>Polarity and orientation</strong>Under magnification, check the electrolytics C1, C17 and C18; diodes D1–D3, D5, D6 and the TVS D2 (band on VBUS); LEDs D4, D7, D8 and D16; D15 (band on VBUS_EXT); Q1–Q3; and the pin-1 mark of every IC, including U15, U16 and U17.</li>
-  <li><strong>Solder bridges</strong>On the 0.5 mm pitch parts (U4, U6, U7, U10, U14, U12's small pins) and the 0.65 mm parts (U3, U13, U8, U9).</li>
+  <li><strong>Polarity and orientation</strong>Under magnification, check the electrolytics C1, C17 and C18; diodes D1–D3, D5, D6 and the TVS D2 (band on VBUS); LEDs D4, D7, D8 and D16; D15 (band on VBUS_EXT); D18 and D19 (SS34 under J27 and J28, band toward the header); Q1–Q4 (Q4 on the bottom, below F1) and Q5 (BSS138, the aux-servo output-enable inverter); D17 beside F1, band on BAT_PRE_SW; J26 (v0.11) for the rocker lead, not J25; J27 and J28 for the head servos, not the hip headers; and the pin-1 mark of every IC, including U15, U16, U17 and U18 (PCA9685).</li>
+  <li><strong>Solder bridges</strong>On the 0.5 mm pitch parts (U4, U6, U7, U10, U14, U12's small pins) and the 0.65 mm parts (U3, U13, U8, U9, U18).</li>
   <li><strong>Exposed pads</strong>U8 and U9 (DRV8313), U11 (TPS54560), U16's PowerPAD and U12's PGND, VIN and SW pads must be soldered. Use X-ray if you can; otherwise watch for abnormal heating in stages 2 and 5.</li>
   <li><strong>Resistance to GND</strong>Each rail should read a value that rises as the capacitors charge, never a steady near-0 Ω: VBUS at C1 <code>+</code>, VMOT at C40 or C46, +5V at C3, VSERVO at J20 pin 2, +3V3 at C5, +1V8 at C6.</li>
   <li><strong>Connector polarity</strong>J1 (XT30): pin 2 <code>+</code>, pin 1 <code>−</code>, marked on the silkscreen. Check it against your battery lead with a meter. J24 and J25 likewise: pin 2 <code>+</code>.</li>
+  <li><strong>Master switch</strong>With the switch at OFF (v0.11: rocker OFF or unplugged from J26), the resistance from J1 pin 2 to VBUS must be high: Q4 and its body diode block. At ON it only reads near 0 Ω once Q4's gate is driven, so check that in stage 1.</li>
   <li><strong>JP1</strong>On the bottom side, the factory bridge must join pads 1–2: J24 follows the E-stop, the safe default.</li>
 </ol>
 
 <h2 id="stage-1">Stage 1 · First power, board only</h2>
-<p>No Duo S, motors, servos, sensor cables or E-stop. Supply on J1 at <strong>12.0 V with a 100 mA limit</strong>, raised slowly from 0 V. The 5 V buck starts at about 6.5 V and the 6 V buck at about 7.4 V. At 12 V the supply should settle at a few mA to a few tens of mA; if it sits in current limit, switch off and look for a short.</p>
+<p>No Duo S, motors, servos, sensor cables or E-stop. Start with the switch at OFF (v0.11: also try it with nothing on J26). Supply on J1 at <strong>12.0 V with a 100 mA limit</strong>, raised slowly from 0 V: at OFF the supply current must be essentially zero and VBUS must stay at 0 V. Switch ON, and confirm which position conducts (v0.10: the datasheet does not state the slider mapping; v0.11: the rocker's I position must close J26). Q4's gate should then sit about −8.2 V from its source at 12 V and −11.4 V at 16.8 V on v0.10, and −8.0 V and −11.2 V on v0.11, where the rocker carries about 1 mA. Switch OFF and let VBUS fall before switching ON again. The 5 V buck starts at about 6.5 V and the 6 V buck at about 7.4 V. At 12 V the supply should settle at a few mA to a few tens of mA; if it sits in current limit, switch off and look for a short.</p>
 <div class="table-wrap"><table>
   <thead><tr><th>Rail</th><th>Expected</th><th>Where</th></tr></thead>
   <tbody>
@@ -43,7 +45,7 @@ section: board
     <tr><td><code>+3V3</code> / <code>+1V8</code></td><td>3.3 V / 1.8 V</td><td>C5 / C6</td></tr>
   </tbody>
 </table></div>
-<p>Green D4 is lit; yellow D7 (EN) and red D8 (FLT) are dark. With nothing driving them, <code>MOT_EN</code> (TP2), <code>WDT_OK</code> (TP1) and <code>ESTOP_RUN</code> (TP9) read low and <code>DRV_NFAULT</code> (TP10) reads 3.3 V. With a jumper or NC switch on J10, <code>ESTOP_OK</code> reads about 3.0 V. Repeat at 16.8 V (a full 4S pack): nothing may change.</p>
+<p>Green D4 is lit; yellow D7 (EN) and red D8 (FLT) are dark. With nothing driving them, <code>MOT_EN</code> (TP2), <code>WDT_OK</code> (TP1) and <code>ESTOP_RUN</code> (TP9) read low and <code>DRV_NFAULT</code> (TP10) reads 3.3 V. With a jumper or NC switch on J10, <code>ESTOP_OK</code> reads about 3.0 V. On v0.11, J27 and J28 pin 2 sit about 5.8–5.9 V with nothing plugged in (VSERVO minus the small SS34 drop) and pin 1 stays low. Repeat at 16.8 V (a full 4S pack): nothing may change.</p>
 
 <h2 id="stage-2">Stage 2 · Rail load test</h2>
 <p>Still no Duo S. Load +5V to 1.5 A, then VSERVO to 4 A, then both, with the supply limit raised to 6 A. Each rail must stay within ±3 %, and the switch nodes must show no oscillation beyond light-load PFM. Step VSERVO to 7 A for a few seconds (two stalled servos). After 5 minutes, check U11, U12, D5, L1 and L2: stop if any part rises more than about 40 °C above ambient.</p>
@@ -78,6 +80,7 @@ section: board
 <div class="table-wrap"><table>
   <thead><tr><th>Address</th><th>Device</th><th>Identity check</th></tr></thead>
   <tbody>
+    <tr><td><code>0x40</code></td><td>PCA9685 aux servo driver (v0.11)</td><td>Answers with the devices below. <code>0x70</code> also answers until firmware clears the All Call bit</td></tr>
     <tr><td><code>0x48</code></td><td>ADS1115 rail monitor</td><td>Read the config register, then the four channels below</td></tr>
     <tr><td><code>0x68</code></td><td>BMI323 IMU</td><td>Register 0x00, after the two dummy bytes: low byte <code>0x43</code></td></tr>
   </tbody>
@@ -118,6 +121,16 @@ section: board
 <h2 id="stage-6">Stage 6 · Hip servos and knee sensors</h2>
 <p>One DS3240 on J20 or J21, its knee AS5048A on J17 (left) or J18 (right), the leg free to move. Check the knee sensor as in stage 5; with all four sensors connected, each chip select must give clean frames. Start the servo at mid pulse and sweep slowly: the knee angle must follow monotonically with DIAG good across the whole travel. Watch VSERVO on the scope during fast moves, and calibrate <code>knee_zero</code>, <code>knee_sign</code> and the servo map against the measured knee angle.</p>
 
+<h2 id="stage-6b">Stage 6b · Aux servo ports</h2>
+<p>v0.11 only. Duo S fitted, one MG90S on J27 or J28, its horn free to move. Motors stay disarmed.</p>
+<ol class="steps">
+  <li><strong>Bus</strong>An I²C scan from the C906 shows <code>0x40</code> (U18) together with <code>0x48</code> and <code>0x68</code>, and <code>0x70</code> while the PCA9685 All Call bit is set. With the IMU streaming, the extra writes must not miss an IMU deadline.</li>
+  <li><strong>E-stop gate</strong>With the latch clear, J27 and J28 pin 1 stay low even if U18 is configured and running, and the servo is limp. Arm the latch: pulses appear. Open the loop: they stop at once.</li>
+  <li><strong>Pulse width</strong>Set 50 Hz and measure the period and a 1.5 ms pulse. Trim the prescaler, or the per-board pulse calibration, for the internal oscillator's spread.</li>
+  <li><strong>Supply</strong>Pin 2 reads about 5.55–5.7 V while the MG90S moves and during a one-second stall. Record the stall current. Repeat with a hip servo moving at the same time and watch VSERVO for the droop that latches <code>BAL_SUPPLY</code>.</li>
+  <li><strong>Diodes</strong>After a 5 s stall, check D18 and D19. An SS34 at 1 A dissipates about 0.45 W and runs warm.</li>
+</ol>
+
 <h2 id="stage-7">Stage 7 · Battery and thermal soak</h2>
-<p>Expect a spark at the first battery connection: use an anti-spark lead, a pre-charge resistor or a battery switch closed last. Run both motors at a moderate held torque with both servos holding a crouch for 10 minutes. Log VBUS, VMOT, VSERVO and +5V, and check the DRV8313s, the bucks, D5, Q1, Q2 and F1. Capture peak VBUS and VMOT during deceleration and E-stop. Only then does the robot go on the floor.</p>
+<p>Connect the pack with the switch at OFF, then switch ON: the board's input capacitance charges at turn-on through Q4, and that current is not limited, so measure it on the bench first. On a v0.9 or earlier board, expect a spark at the battery connection instead: use an anti-spark lead, a pre-charge resistor or a battery switch closed last. Run both motors at a moderate held torque with both servos holding a crouch for 10 minutes. Log VBUS, VMOT, VSERVO and +5V, and check the DRV8313s, the bucks, D5, Q1, Q2 and F1. Capture peak VBUS and VMOT during deceleration and E-stop. Only then does the robot go on the floor.</p>
 <div class="callout ok"><span class="title">Done</span><p>A board that passes stage 7 is ready for <a href="../robot/assembly.html">assembly into the robot</a> and supervised balancing.</p></div>

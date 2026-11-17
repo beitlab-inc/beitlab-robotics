@@ -1,26 +1,28 @@
 <!--meta
-title: Robotics Board v0.8 · Beitlab Robotics
-description: The Beitlab Robotics Board v0.8, a Milk-V Duo S carrier with two DRV8313 motor drivers, on-board power, a BMI323 IMU, four SPI angle-sensor ports and a latched hardware E-stop.
+title: Robotics Board v0.11 · Beitlab Robotics
+description: The Beitlab Robotics Board v0.11, a Milk-V Duo S carrier with two DRV8313 motor drivers, on-board power, a connector for an ON/OFF master rocker, a BMI323 IMU, four SPI angle-sensor ports and a latched hardware E-stop.
 layout: docs
 section: board
 -->
 <p class="kicker"><span class="eyebrow">Robotics Board</span></p>
-<h1>Robotics Board v0.8</h1>
+<h1>Robotics Board v0.11</h1>
 <p class="lead">A carrier board for the Milk-V Duo S that connects every robot device to the SG2000's C906 RISC-V core. The motor drivers, power conversion, IMU and safety chain are all on board; motors, sensors and servos plug in by cable.</p>
-<div class="meta-row"><span class="badge ok">Frozen 2026-11-11</span><span class="badge">4 layers · 100 × 66 mm</span><span class="badge">219 parts</span><span class="badge wip">Bench qualification pending</span></div>
+<div class="meta-row"><span class="badge wip">Working revision</span><span class="badge ok">v0.10 frozen 2026-11-16</span><span class="badge">4 layers · 100 × 66 mm</span><span class="badge">239 parts</span><span class="badge wip">Bench qualification pending</span></div>
 
 <figure>
-  <img src="{{repo:hardware/kicad/balance_carrier/pcb_top.png}}" alt="Top side of the Robotics Board v0.8 with connector labels" loading="lazy">
-  <figcaption>Top side. The Duo S sits under the left 45 mm, its RJ45 and USB-A in the notch. Power entry is on the right edge, motor and servo connectors along the bottom.</figcaption>
+  <img src="{{repo:hardware/kicad/balance_carrier/pcb_top.png}}" alt="Top side of the Robotics Board v0.11 with connector labels and the rocker connector J26 at the bottom right" loading="lazy">
+  <figcaption>Top side. The Duo S sits under the left 45 mm, its RJ45 and USB-A in the notch. Power entry is on the right edge, the ON/OFF rocker connector J26 in the bottom-right corner, and the motor, hip and aux servo connectors along the bottom.</figcaption>
 </figure>
 
 <h2 id="glance">At a glance</h2>
 <dl class="specs">
   <div><dt>Host</dt><dd>Milk-V Duo S<small>SG2000: A53 Linux + C906 RTOS</small></dd></div>
   <div><dt>Input</dt><dd>4S LiPo, 12–16.8 V<small>XT30, 10 A fuse, reverse protection</small></dd></div>
+  <div><dt>Power switch</dt><dd>ON/OFF rocker on J26<small>in the robot's cover: cuts battery power to the whole board; unplugged, the board stays off</small></dd></div>
   <div><dt>Wheel drivers</dt><dd>2 × DRV8313<small>3-phase, from the switched VMOT</small></dd></div>
   <div><dt>Logic rail</dt><dd>5.32 V / 5 A<small>TPS54560 buck → Duo S VSYS</small></dd></div>
-  <div><dt>Servo rail</dt><dd>6.0 V / 8 A<small>LM61480 synchronous buck</small></dd></div>
+  <div><dt>Servo rail</dt><dd>6.0 V / 8 A<small>LM61480 synchronous buck; aux ports see about 5.6 V through a diode</small></dd></div>
+  <div><dt>Aux servos</dt><dd>J27 / J28<small>PCA9685 on I²C4; pulses stay off until the E-stop is armed</small></dd></div>
   <div><dt>IMU</dt><dd>Bosch BMI323<small>I²C4, data-ready interrupt</small></dd></div>
   <div><dt>Angle sensors</dt><dd>4 × SPI ports<small>AS5048A, 14-bit, own chip selects</small></dd></div>
   <div><dt>Safety</dt><dd>Latched E-stop<small>+ 10 ms watchdog, cuts VMOT</small></dd></div>
@@ -36,14 +38,16 @@ section: board
     <tr><td>Rotor angle</td><td>AS5048A board shipped on each GM4108H</td><td>SPI 1 (J15), SPI 2 (J16)</td></tr>
     <tr><td>Knee angle</td><td>AS5048A board on each knee axis</td><td>SPI 3 (J17), SPI 4 (J18)</td></tr>
     <tr><td>Hip servos</td><td>2 × DSSERVO DS3240 (40 kg·cm)</td><td>J20 / J21, 50–330 Hz PWM, 6 V</td></tr>
-    <tr><td>IMU</td><td>Bosch BMI323 (U10, 0x68)</td><td>I²C4 through a PCA9306, INT1 data-ready</td></tr>
+    <tr><td>Aux servos</td><td>2 × MG90S class, for example the head's pan and tilt. PCA9685 (U18, 0x40) on I²C4</td><td>J27 (AUX1) / J28 (AUX2). VSERVO through an SS34 each, about 5.6 V. Pulses low until the E-stop latch is armed</td></tr>
+    <tr><td>IMU</td><td>Bosch BMI323 (U10, 0x68)</td><td>I²C4 through a PCA9306, INT1 data-ready. The same bus carries the PCA9685 (0x40) and the ADS1115</td></tr>
     <tr><td>Rail monitor</td><td>TI ADS1115 (0x48)</td><td>I²C4: VBUS, VSERVO, +5 V, VMOT</td></tr>
+    <tr><td>Master switch</td><td>AOD4185 P-MOSFET (Q4); v0.11: rocker in the cover, JST-PH lead to J26 (PWR SW). v0.10: Nidec CAS-120A1 slide switch (SW1) on the board</td><td>Bottom-right corner; unplugged = OFF; shut Ubuntu down before switching OFF</td></tr>
     <tr><td>Accessory power</td><td>TPS16630 eFuse, TPS2553 switch</td><td>J24 battery out (2.5 A), J25 5 V out (0.5 A)</td></tr>
     <tr><td>Expansion</td><td>Optional 3.3 V I²C display</td><td>J23</td></tr>
     <tr><td>Debug</td><td>Linux console, UART0</td><td>J22</td></tr>
   </tbody>
 </table></div>
-<p>The right wheel runs on PWM controller 0 (3.3 V header J3) and the left wheel on controller 2 (1.8 V header J4, through a level translator), so each wheel's three phases update together. All four angle sensors share SPI3.</p>
+<p>The right wheel runs on PWM controller 0 (3.3 V header J3) and the left wheel on controller 2 (1.8 V header J4, through a level translator), so each wheel's three phases update together. The hip servos use the remaining hardware PWM. No pad is left for the head, so a PCA9685 on I²C4 makes the J27 and J28 pulses. All four angle sensors share SPI3.</p>
 
 <h2 id="connectors">Connectors and pinouts</h2>
 <p>Pin 1 is marked on the silkscreen. Check every cable with a meter before first power-on: JST-SH and JST-XH leads are easy to build mirrored.</p>
@@ -56,6 +60,8 @@ section: board
     <div class="pins"><span class="pin pwr"><i>1</i>3V3</span><span class="pin gnd"><i>2</i>GND</span><span class="pin sig"><i>3</i>SCK</span><span class="pin sig"><i>4</i>MISO</span><span class="pin sig"><i>5</i>MOSI</span><span class="pin sig"><i>6</i>CS</span></div></div>
   <div class="conn"><h4>J20 / J21 · Servos</h4><p>2.54 mm header, 3 pins, 6 V rail. Left / right hip.</p>
     <div class="pins"><span class="pin sig"><i>1</i>PWM</span><span class="pin pwr"><i>2</i>6 V</span><span class="pin gnd"><i>3</i>GND</span></div></div>
+  <div class="conn"><h4>J27 / J28 · Aux servos (v0.11)</h4><p>2.54 mm header, 3 pins, same order as the hips. AUX1 / AUX2, along the bottom under the motor connectors. About 5.6 V: VSERVO through an SS34. The signal stays low until the E-stop latch is armed.</p>
+    <div class="pins"><span class="pin sig"><i>1</i>PWM</span><span class="pin pwr"><i>2</i>≈5.6 V</span><span class="pin gnd"><i>3</i>GND</span></div></div>
   <div class="conn"><h4>J10 · E-stop loop</h4><p>JST-SH, 2 pins. A normally-closed switch between them.</p>
     <div class="pins"><span class="pin pwr"><i>1</i>SUPPLY</span><span class="pin sig"><i>2</i>ESTOP_OK</span></div></div>
   <div class="conn"><h4>J22 · Debug UART0</h4><p>JST-SH, 3 pins, 3.3 V logic, no power.</p>
@@ -66,9 +72,11 @@ section: board
     <div class="pins"><span class="pin gnd"><i>1</i>− GND</span><span class="pin pwr"><i>2</i>+ VBUS</span></div></div>
   <div class="conn"><h4>J25 · Accessory 5 V out</h4><p>JST-PH 2 pins. 0.5 A, logic power only.</p>
     <div class="pins"><span class="pin gnd"><i>1</i>− GND</span><span class="pin pwr"><i>2</i>+ 5 V</span></div></div>
+  <div class="conn"><h4>J26 · ON/OFF rocker (v0.11)</h4><p>JST-PH 2 pins, the same part as J25: do not swap the two leads. A maintained rocker between the pins; the wires are not polarized. Unplugged, the board stays off.</p>
+    <div class="pins"><span class="pin sig"><i>1</i>MASTER_DRIVE</span><span class="pin gnd"><i>2</i>GND</span></div></div>
 </div>
 <h3 id="spi-labels">Angle-sensor ports</h3>
-<p>All four ports are on one SPI3 bus with a chip select each. Depending on the production batch, a v0.8 board's silkscreen shows either the original names or SPI 1–4. The wiring is identical.</p>
+<p>All four ports are on one SPI3 bus with a chip select each. Boards from v0.9 on are silkscreened SPI 1–4. Depending on the production batch, a v0.8 board shows either the original names or SPI 1–4. The wiring is identical.</p>
 <div class="table-wrap"><table>
   <thead><tr><th>Connector</th><th>Original label</th><th>Newer label</th><th>Sensor</th><th>Chip select</th></tr></thead>
   <tbody>
@@ -86,14 +94,15 @@ section: board
   <tbody>
     <tr><td><code>VBUS</code> 12–16.8 V</td><td>4S pack, 10 A NANO2 fuse, AOD4185 PMOS</td><td>≈ 8 A (≈ 10 A with J24 at its limit)</td><td>SMBJ20A TVS, 220 µF bulk</td></tr>
     <tr><td><code>VMOT</code></td><td>VBUS through Q2, on only while the E-stop latch is set</td><td>≈ 3 A, both motors</td><td>Soft ramp, about 30 V/ms</td></tr>
-    <tr><td><code>VSERVO</code> 6.0 V</td><td>LM61480 buck, 8 A</td><td>2 × 3.5 A stall</td><td>A double stall is fine for seconds, not continuously</td></tr>
+    <tr><td><code>VSERVO</code> 6.0 V</td><td>LM61480 buck, 8 A</td><td>2 × 3.5 A stall, plus about 1 A each on J27 and J28</td><td>A double hip stall is fine for seconds, not continuously. Both aux servos stalled on top of both hips exceeds 8 A, so the rail sags</td></tr>
     <tr><td><code>+5V</code> 5.32 V</td><td>TPS54560 buck, 5 A</td><td>≈ 1.2 A + J25</td><td>Feeds Duo S VSYS through a Schottky, about 4.9–5.0 V</td></tr>
     <tr><td><code>+3V3</code></td><td>AP2112K-3.3</td><td>≈ 90 mA</td><td>Sensors, IMU, ADC, logic</td></tr>
     <tr><td><code>+1V8</code></td><td>AP2112K-1.8</td><td>&lt; 5 mA</td><td>Level-translator references</td></tr>
   </tbody>
 </table></div>
 <div class="callout warn"><span class="title">Plugging in the battery</span>
-  <p>About 260 µF of input capacitance charges through Q1's body diode when the pack is connected, so expect a spark at the XT30. Use an anti-spark lead, a 10 Ω pre-charge resistor bridged out after a second, or a battery switch that is closed last. The E-stop cuts motor power, not the battery: fit a physical battery disconnect as well.</p>
+  <p>From v0.10, connect the pack with the ON/OFF switch at OFF (from v0.11, the rocker in the cover): the master MOSFET then keeps the board's input capacitance from charging at the XT30. The capacitance charges when you switch ON instead, and that turn-on current is not limited; measure it on the bench before relying on it. On v0.5–v0.9 boards about 260 µF charges through Q1's body diode when the pack is connected, so expect a spark at the XT30: use an anti-spark lead, a 10 Ω pre-charge resistor bridged out after a second, or a battery switch that is closed last.</p>
+  <p>Switching OFF cuts power to the Duo S at once. Shut Ubuntu down and wait for it to halt first. The E-stop cuts motor power, not the battery, and the ON/OFF switch is not an emergency stop. J26 is the same connector as J25: if the two leads are swapped, the rocker shorts J25's current-limited output when ON and the robot does not switch on, so label them.</p>
 </div>
 <p><strong>Torque budget.</strong> The GM4108H is a direct-drive gimbal motor. With the firmware's 1.5 A current clamp, expect about 0.15 N·m per wheel. With the robot's 84.8 mm wheels that is enough to recover from a lean of roughly 20°, not for fast get-ups: keep the robot light. There is no current sensing; torque is set through a motor model, so measure R, K<sub>e</sub> and the zero electrical angle on every motor.</p>
 
@@ -106,6 +115,7 @@ section: board
   <li><strong>Safe at power-up.</strong> A supervisor (U15) holds the latch clear through startup and brownouts, and every control line has a pull-down. The drivers stay asleep and disabled while Linux boots.</li>
   <li><strong>Accessory output.</strong> J24 follows the E-stop latch by default (jumper JP1, pads 1–2). Moving it to 2–3 keeps J24 on whenever the board is powered: do that only deliberately.</li>
   <li><strong>The servo rail is not cut</strong> by the E-stop, because cutting knee power would drop the robot. The servo-hold policy on faults is a firmware decision.</li>
+  <li><strong>Aux servo pulses.</strong> The PCA9685 output enable follows the E-stop latch, inverted. While the latch is clear, including at power-up, J27 and J28 stay low and those servos go limp. Their supply stays on, because it comes from the knee rail through D18 and D19.</li>
 </ul>
 
 <h2 id="status-leds">Status LEDs and test points</h2>
@@ -131,11 +141,12 @@ section: board
 
 <h2 id="files">Reference documents</h2>
 <div class="cards">
-  <a class="card" href="{{repo:hardware/releases/carrier-v0.9/docs/balance_carrier.pdf}}"><span class="tag">Schematic</span><h4>Full schematic</h4><p>Every sheet of the frozen v0.9 design.</p><span class="size">PDF · {{size:hardware/releases/carrier-v0.9/docs/balance_carrier.pdf}}</span></a>
+  <a class="card" href="{{repo:hardware/kicad/balance_carrier/balance_carrier.pdf}}"><span class="tag">Schematic</span><h4>Full schematic</h4><p>Every sheet of the current v0.11 working revision.</p><span class="size">PDF · {{size:hardware/kicad/balance_carrier/balance_carrier.pdf}}</span></a>
+  <a class="card" href="{{repo:hardware/releases/carrier-v0.10/docs/balance_carrier.pdf}}"><span class="tag">Schematic</span><h4>Full schematic, frozen v0.10</h4><p>The last frozen release, with the switch on the board. Reorder from this one until v0.11 is frozen.</p><span class="size">PDF · {{size:hardware/releases/carrier-v0.10/docs/balance_carrier.pdf}}</span></a>
   <a class="card" href="{{repo:hardware/SUBSYSTEMS.pdf}}"><span class="tag">Report</span><h4>Subsystems</h4><p>Block diagrams, board maps, derived values and measured layout checks.</p><span class="size">PDF · {{size:hardware/SUBSYSTEMS.pdf}}</span></a>
   <a class="card" href="{{repo:hardware/CIRCUITS.pdf}}"><span class="tag">Report</span><h4>Circuit drawings</h4><p>Each subsystem with standard symbols, checked against the netlist.</p><span class="size">PDF · {{size:hardware/CIRCUITS.pdf}}</span></a>
 </div>
 <figure>
-  <img src="{{repo:hardware/kicad/balance_carrier/pcb_bottom.png}}" alt="Bottom side of the Robotics Board v0.8" loading="lazy">
+  <img src="{{repo:hardware/kicad/balance_carrier/pcb_bottom.png}}" alt="Bottom side of the Robotics Board v0.11" loading="lazy">
   <figcaption>Bottom side: J8/J9 Duo S sockets, buck feedback parts, cable ESD arrays, bulk capacitors and the JP1 jumper.</figcaption>
 </figure>

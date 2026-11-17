@@ -305,9 +305,9 @@ def make_posters() -> None:
     video = SITE / "assets" / "video"
     img = SITE / "assets/img"
     jobs = [  # (video, second, crop x0, y0, x1, y1 in 1920x1080, width, output)
-        ("beitlab_balance_robot_v1_promo.mp4", 42.0, 360, 30, 1560, 990, 1200, "hero-robot.jpg"),
-        ("beitlab_balance_robot_v1_promo.mp4", 42.0, 0, 0, 1920, 1080, 1280, "promo-poster.jpg"),
-        ("beitlab_balance_robot_v1_assembly_guide.mp4", 145.0, 0, 0, 1920, 1080, 1280, "assembly-poster.jpg"),
+        ("beitlab_balance_robot_v1_promo.mp4", 52.0, 360, 30, 1560, 990, 1200, "hero-robot.jpg"),       # hero (46.5-53.5 s), front view
+        ("beitlab_balance_robot_v1_promo.mp4", 52.0, 0, 0, 1920, 1080, 1280, "promo-poster.jpg"),
+        ("beitlab_balance_robot_v1_assembly_guide.mp4", 182.0, 0, 0, 1920, 1080, 1280, "assembly-poster.jpg"),   # the final orbit
     ]
     for name, t, x0, y0, x1, y1, width, out in jobs:
         cap = cv2.VideoCapture(str(video / name))

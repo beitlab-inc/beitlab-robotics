@@ -114,19 +114,21 @@ section: docs
 
 <h3 id="power-up">Power up through the board</h3>
 <ol class="steps">
-  <li><strong>Set the bench supply</strong>12.0 V with a <strong>1 A</strong> current limit, connected to J1 (XT30: pin 2 is <code>+</code>, pin 1 is <code>−</code>; check your lead with a meter). No motors, servos or battery yet.</li>
+  <li><strong>Set the bench supply</strong>12.0 V with a <strong>1 A</strong> current limit, connected to J1 (XT30: pin 2 is <code>+</code>, pin 1 is <code>−</code>; check your lead with a meter). No motors, servos or battery yet. On a v0.10 or later board, leave the ON/OFF switch at OFF for now (on v0.11, leave the rocker unplugged).</li>
   <li><strong>Start the console first</strong>Open the serial terminal before switching on, so you see the whole boot log.</li>
-  <li><strong>Switch on</strong>The green power LED lights. The yellow EN and red FLT LEDs stay dark: the motors are disabled until firmware explicitly arms them. Linux boots and the console offers a login prompt.</li>
+  <li><strong>Switch on</strong>Turn the supply on (on a v0.10 or later board, switch ON; on v0.11, plug in the rocker first). The green power LED lights. The yellow EN and red FLT LEDs stay dark: the motors are disabled until firmware explicitly arms them. Linux boots and the console offers a login prompt.</li>
   <li><strong>Log in</strong>As <code>root</code> with your new password, either on the console or by SSH over Ethernet.</li>
 </ol>
 <div class="callout warn"><span class="title">The real-time buses belong to the C906</span>
   <p>In the finished system Linux must not claim I²C4, SPI3, PWM controllers 0–2 or the board's GPIOs; the C906 firmware owns them. For bring-up only, you can enable I²C4 and SPI3 in a <em>test</em> device tree and use <code>i2c-tools</code> and <code>spidev</code>. Remove it before running the C906 firmware.</p>
 </div>
-<p>With a test device tree loaded, a scan of the board's I²C bus should show exactly two devices (bus numbers depend on the image):</p>
+<p>With a test device tree loaded, a scan of the board's I²C bus should show the three devices below (bus numbers depend on the image). Address 0x70 also answers until firmware clears the PCA9685 All Call bit:</p>
 <pre><code><span class="p">[root@milkv-duo]~# </span>i2cdetect -l              <span class="c"># find the I2C4 bus number</span>
 <span class="p">[root@milkv-duo]~# </span>i2cdetect -y &lt;bus&gt;
+<span class="c">#   0x40  PCA9685 aux servo driver (v0.11)</span>
 <span class="c">#   0x48  ADS1115 rail monitor</span>
-<span class="c">#   0x68  BMI323 IMU (chip ID 0x43)</span></code></pre>
+<span class="c">#   0x68  BMI323 IMU (chip ID 0x43)</span>
+<span class="c">#   0x70  PCA9685 All Call, until firmware clears it</span></code></pre>
 <p>The full sensor checks, with expected register values and rail readings, are in <a href="board/bring-up.html#stage-4">bring-up stage 4</a>.</p>
 
 <h2 id="ros2">5. See the robot on your PC</h2>

@@ -14,7 +14,7 @@ section: robot
   <video id="asm-video" data-chapters controls preload="metadata" playsinline poster="{{root}}assets/img/assembly-poster.jpg">
     <source src="{{root}}assets/video/beitlab_balance_robot_v1_assembly_guide.mp4" type="video/mp4">
   </video>
-  <figcaption>Rendered from the mounted CAD model · 2 min 33 s · 44.1 MB</figcaption>
+  <figcaption>Rendered from the mounted CAD model, with the head and chest camera · 3 min 10 s · 53.6 MB</figcaption>
 </figure>
 <div class="chapters" aria-label="Video chapters">
   <button type="button" data-video="asm-video" data-seek="0"><span>0:00</span>Parts</button>
@@ -29,7 +29,10 @@ section: robot
   <button type="button" data-video="asm-video" data-seek="90"><span>1:30</span>9 Wheels</button>
   <button type="button" data-video="asm-video" data-seek="102.5"><span>1:42</span>10 Electronics</button>
   <button type="button" data-video="asm-video" data-seek="116.5"><span>1:56</span>11 Wiring</button>
-  <button type="button" data-video="asm-video" data-seek="140.5"><span>2:20</span>12 Calibrate</button>
+  <button type="button" data-video="asm-video" data-seek="140.5"><span>2:20</span>12 Head: neck</button>
+  <button type="button" data-video="asm-video" data-seek="156.5"><span>2:36</span>13 Head: visor</button>
+  <button type="button" data-video="asm-video" data-seek="167.5"><span>2:47</span>14 Chest camera</button>
+  <button type="button" data-video="asm-video" data-seek="177.5"><span>2:57</span>15 Calibrate</button>
 </div>
 
 <h2 id="before">Before you print</h2>
@@ -61,6 +64,13 @@ section: robot
     <tr><td>Sensor cap</td><td class="num">2</td><td><a href="{{repo:design/body_v1/out/options/option_B/stl/B_sensor_cap.stl}}">B_sensor_cap.stl</a></td><td>Pins up; clamps and guards the board</td></tr>
     <tr><td>Magnet holder</td><td class="num">2</td><td><a href="{{repo:design/body_v1/out/options/option_B/stl/B_magnet_holder.stl}}">B_magnet_holder.stl</a></td><td></td></tr>
     <tr><td>Knee spacer</td><td class="num">2</td><td><a href="{{repo:design/body_v1/out/options/option_B/stl/B_knee_spacer.stl}}">B_knee_spacer.stl</a></td><td>100 % infill</td></tr>
+    <tr><td>Head collar (pan servo shroud)</td><td class="num">1</td><td><a href="{{repo:design/body_v1/out/head/stl/head_v1_collar.stl}}">head_v1_collar.stl</a></td><td>Black; upside down; 4 M3 inserts</td></tr>
+    <tr><td>Neck</td><td class="num">1</td><td><a href="{{repo:design/body_v1/out/head/stl/head_v1_neck.stl}}">head_v1_neck.stl</a></td><td>Black; base down</td></tr>
+    <tr><td>Head shell</td><td class="num">1</td><td><a href="{{repo:design/body_v1/out/head/stl/head_v1_head_shell.stl}}">head_v1_head_shell.stl</a></td><td>Orange; face down. Switch to black at 1.2 mm and back to orange at 1.8 mm for the black face; 4 M3 inserts</td></tr>
+    <tr><td>Head cap</td><td class="num">1</td><td><a href="{{repo:design/body_v1/out/head/stl/head_v1_head_cap.stl}}">head_v1_head_cap.stl</a></td><td>Orange; top down</td></tr>
+    <tr><td>Eyes</td><td class="num">2</td><td><a href="{{repo:design/body_v1/out/head/stl/head_v1_eye_left.stl}}">head_v1_eye_left.stl</a>, <a href="{{repo:design/body_v1/out/head/stl/head_v1_eye_right.stl}}">head_v1_eye_right.stl</a></td><td>White or grey; pressed into the face</td></tr>
+    <tr><td>Chest back</td><td class="num">1</td><td><a href="{{repo:design/body_v1/out/head/stl/head_v1_chest_back.stl}}">head_v1_chest_back.stl</a></td><td>Black; on its back plate; 2 M3 inserts</td></tr>
+    <tr><td>Chest front</td><td class="num">1</td><td><a href="{{repo:design/body_v1/out/head/stl/head_v1_chest_front.stl}}">head_v1_chest_front.stl</a></td><td>Orange; panel down</td></tr>
   </tbody>
 </table></div>
 <p><strong>Test the bearing fit first.</strong> Print one bone and press a 625ZZ into it. All bearing bores are the same size, so this one test checks them all.</p>
@@ -70,7 +80,7 @@ section: robot
 <div class="table-wrap"><table>
   <thead><tr><th class="num">Qty</th><th>Part</th></tr></thead>
   <tbody>
-    <tr><td class="num">1</td><td>Robotics Board v0.8 from Beitlab Robotics, checked through <a href="../board/bring-up.html">bring-up</a></td></tr>
+    <tr><td class="num">1</td><td>Robotics Board v0.11 from Beitlab Robotics, checked through <a href="../board/bring-up.html">bring-up</a></td></tr>
     <tr><td class="num">1</td><td>Milk-V Duo S with a flashed microSD card (<a href="../getting-started.html#flash">First steps</a>)</td></tr>
     <tr><td class="num">2</td><td>iPower GM4108H-120T gimbal motor with its AS5048A encoder board</td></tr>
     <tr><td class="num">2</td><td>DSSERVO DS3240 servo, each with a 25T aluminium clamp arm</td></tr>
@@ -78,12 +88,16 @@ section: robot
     <tr><td class="num">2</td><td>8 mm D-shaft, 29.5 mm long (knee); stainless (non-magnetic) is better</td></tr>
     <tr><td class="num">1</td><td>4S LiPo with XT30 (default size 75 × 37 × 38 mm) and 2 × 20 mm velcro straps</td></tr>
     <tr><td class="num">1</td><td>16 mm normally-closed mushroom E-stop, at most 20 mm deep behind the panel</td></tr>
-    <tr><td class="num">—</td><td>Cables: JST-XH 3-pin motor leads, JST-SH 6-pin sensor leads, a JST-SH 2-pin E-stop lead</td></tr>
+    <tr><td class="num">1</td><td>Snap-in mini rocker, maintained SPST, at least 25 V DC (KCD11 class: 21 × 15 mm bezel, 19.2 × 12.9 mm cutout, about 20 mm deep), with a 60 mm two-wire lead to a JST-PH 2-pin housing (PHR-2) for J26. Measure yours against the cover first</td></tr>
+    <tr><td class="num">1</td><td>Standard 25T servo, DS3218MG class (head pan), with a 25T aluminium clamp arm as on the hips</td></tr>
+    <tr><td class="num">1</td><td>MG90S metal-gear micro servo (head tilt), with its horn bag</td></tr>
+    <tr><td class="num">1</td><td>DFRobot DFR1154 ESP32-S3 AI camera module (chest)</td></tr>
+    <tr><td class="num">—</td><td>Cables: JST-XH 3-pin motor leads, JST-SH 6-pin sensor leads, a JST-SH 2-pin E-stop lead, a JST-PH 2-pin lead from J25 to the camera's Power IN</td></tr>
   </tbody>
 </table></div>
 <p>Screws, heat-set inserts, bearings, washers, standoffs and magnets, counted from the mounted CAD model:</p>
 {{mdtable:design/body_v1/out/options/option_B/hardware_bom.md}}
-<p class="small muted">Generated from the CAD. Not listed: the clamp arm's own clamp screws, the E-stop's nut, the velcro straps, and M3 nuts for the cover's accessory mounts (only when you add something).</p>
+<p class="small muted">Generated from the CAD, with the head and chest camera. Not listed: the clamp arms' own clamp screws, the E-stop's nut and the velcro straps.</p>
 
 <h2 id="assemble">Assemble</h2>
 <ol class="steps">
@@ -121,12 +135,17 @@ section: robot
         <tr><td>Servo leads</td><td>Up the front deck slot</td><td>J20 (left), J21 (right)</td></tr>
         <tr><td>Battery</td><td>Up the rear slot, behind the board</td><td>J1 (XT30)</td></tr>
         <tr><td>E-stop</td><td>From the cover, held about 40 mm up</td><td>J10</td></tr>
+        <tr><td>ON/OFF rocker</td><td>From the cover, over Q1 and Q2 towards the front</td><td>J26 (not J25)</td></tr>
         <tr><td>Left leg harness</td><td>Through the left side slot</td><td>Phases J2, rotor J15 (SPI 1), knee J17 (SPI 3)</td></tr>
         <tr><td>Right leg harness</td><td>Through the right side slot</td><td>Phases J3, rotor J16 (SPI 2), knee J18 (SPI 4)</td></tr>
+        <tr><td>Camera power</td><td>Out through the front-wall slot, behind the chest panel</td><td>J25 to the DFR1154's Power IN</td></tr>
       </tbody>
     </table></div>
-    Press M3 nuts into the cover's accessory pockets if you will mount anything. Lower the cover and fix it with 4 × M3 × 50 through the cover and deck into the frame's corner posts.</li>
-  <li id="step-12"><strong>Calibrate <button class="jump" type="button" data-video="asm-video" data-seek="140.5">▶ 2:20</button></strong>Before any balancing, follow the board's <a href="../board/bring-up.html#stage-5">bring-up stages 5–7</a> with the robot on a stand, wheels off the ground. Calibrate <code>bal_servo_cal</code> against the knee sensors: the clamp arm sits on the spline in 14.4° steps, so the mechanical zero will not be exact.</li>
+    Snap the ON/OFF rocker into the cover's 19.2 × 12.9 mm cutout before you lower the cover, and plug its lead into J26 as the cover comes down (the two wires are not polarized, but J26 looks like J25: do not plug it there). Leave the rocker at OFF while you work. Press the six M3 nuts into the cover's accessory pockets: the head's collar and the chest camera screw into them. Lower the cover and fix it with 4 × M3 × 50 through the cover and deck into the frame's corner posts.</li>
+  <li id="step-12"><strong>Head: pan servo and neck <button class="jump" type="button" data-video="asm-video" data-seek="140.5">▶ 2:20</button></strong>Centre both head servos (1500 µs) first. Screw the collar to the cover's two top nuts with 2 × M3 × 10, drop the pan servo in and screw its ears to the collar's inserts with 4 × M3 × 8. Fit the 25T clamp arm pointing right, then the neck on the arm with 2 × M3 × 6 from above. Pass the tilt MG90S through the cradle window from the right, fix its ears with 2 M2 screws, and fit its single-arm horn pointing up. Bring both leads down through the hole under the shroud. On Robotics Board v0.11, plug pan into J27 (AUX1) and tilt into J28 (AUX2), signal on pin 1. A separate head board remains the other option in <a href="{{repo:hardware/HEAD_ELECTRONICS.md}}">HEAD_ELECTRONICS.md</a>.</li>
+  <li id="step-13"><strong>Head: visor <button class="jump" type="button" data-video="asm-video" data-seek="156.5">▶ 2:36</button></strong>Press the eyes in. With the cap off, lower the shell straight down onto the neck: the pin enters the left rib's slot. Drive 2 × M2 × 8 through the right side holes into the tilt horn, and close the pin slot with the M2 × 20 keeper from behind, through the hole in the rear chamfer. Fit the cap with 4 × M3 × 6.</li>
+  <li id="step-14"><strong>Chest camera <button class="jump" type="button" data-video="asm-video" data-seek="167.5">▶ 2:47</button></strong>Pass the camera lead from J25 out through the front-wall slot. Screw the chest back to the cover's four front nuts with 4 × M3 × 8. Fix the DFR1154 on its posts, lens forward and USB-C down, with 4 × M2.5 × 8. Then fit the front panel with 2 × M3 × 6. USB-C stays reachable from below for programming.</li>
+  <li id="step-15"><strong>Calibrate <button class="jump" type="button" data-video="asm-video" data-seek="177.5">▶ 2:57</button></strong>Before any balancing, follow the board's <a href="../board/bring-up.html#stage-5">bring-up stages 5–7</a> with the robot on a stand, wheels off the ground. Calibrate <code>bal_servo_cal</code> against the knee sensors: the clamp arm sits on the spline in 14.4° steps, so the mechanical zero will not be exact.</li>
 </ol>
 
 <div class="callout danger"><span class="title">Before the first balance</span>

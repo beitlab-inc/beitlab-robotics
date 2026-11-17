@@ -29,8 +29,8 @@ section: home
           <p>The C906 core runs the LQR. Linux only sends intent.</p>
         </div>
         <div class="orbit-beat" data-start="0.8" data-end="1">
-          <h2>219 parts. One PCB.</h2>
-          <p>Robotics Board v0.8. The motors stay off until the safety chain is armed.</p>
+          <h2>239 parts. One PCB.</h2>
+          <p>Robotics Board v0.11, with a master ON/OFF rocker on the cover and two aux servo ports for the head. The motors stay off until the safety chain is armed.</p>
           <div class="hero-cta">
             <a class="btn primary" href="docs/getting-started.html">Get started
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
@@ -70,15 +70,17 @@ section: home
         </div>
       </article>
       <article class="product">
-        <div class="product-media contain"><img src="{{repo:hardware/kicad/balance_carrier/pcb_top.png}}" alt="Top view of the Robotics Board v0.8 PCB" loading="lazy"></div>
+        <div class="product-media contain"><img src="{{repo:hardware/kicad/balance_carrier/pcb_top.png}}" alt="Top view of the Robotics Board v0.11 PCB, with the rocker connector J26 at the bottom right" loading="lazy"></div>
         <div class="product-body">
-          <div class="product-top"><h3>Robotics Board v0.8</h3><span class="badge ok">Design frozen</span></div>
+          <div class="product-top"><h3>Robotics Board v0.11</h3><span class="badge wip">Working revision</span></div>
           <p>A carrier board for the Milk-V Duo S that puts motor drivers, power conversion, IMU and the safety chain
             on one 4-layer PCB. No external microcontroller is needed.</p>
           <ul class="ticks">
             <li>2 × DRV8313 three-phase drivers, 5.3 V / 5 A and 6 V / 8 A bucks</li>
             <li>BMI323 IMU, ADS1115 rail monitor, four SPI angle-sensor ports</li>
             <li>Latched hardware E-stop and watchdog: motors stay off until armed</li>
+            <li>Master ON/OFF: a rocker in the robot's cover, wired to J26, cuts battery power to the whole board (v0.10, frozen, has a slide switch on the board instead)</li>
+            <li>Two aux servo ports, J27 and J28, for the head. A PCA9685 makes the pulses, and they stay off until the E-stop is armed</li>
             <li>Status LEDs and test points on every safety signal</li>
           </ul>
           <div class="links">
@@ -144,12 +146,12 @@ section: home
         <p class="arch-label">C906 RISC-V · FreeRTOS</p>
         <div class="block hot"><span class="rate">400 Hz</span><h4>Balance task</h4><p>State estimate, gain-scheduled LQR, yaw and height control, watchdog kick.</p></div>
         <div class="block hot"><span class="rate">10 kHz</span><h4>Fast ISR</h4><p>SPI angle frames, voltage-mode FOC with SVPWM for both wheels.</p></div>
-        <div class="block"><span class="rate">async</span><h4>I²C task</h4><p>BMI323 bursts and ADS1115 rails, double-buffered.</p></div>
+        <div class="block"><span class="rate">async</span><h4>I²C task</h4><p>BMI323 bursts, ADS1115 rails and PCA9685 servo writes, double-buffered.</p></div>
       </div>
       <div class="arch-link"><span>PWM<br>SPI · I²C<br>GPIO</span></div>
       <div class="arch-col">
-        <p class="arch-label">Robotics Board v0.8</p>
-        <div class="block"><h4>Drive</h4><p>2 × DRV8313 → GM4108H wheels; 2 × DS3240 hip servos on 6 V / 8 A.</p></div>
+        <p class="arch-label">Robotics Board v0.11</p>
+        <div class="block"><h4>Drive</h4><p>2 × DRV8313 → GM4108H wheels; 2 × DS3240 hip servos on 6 V / 8 A; head servos on J27 and J28.</p></div>
         <div class="block"><h4>Sensing</h4><p>4 × AS5048A (rotors and knees), BMI323 IMU, rail monitor.</p></div>
         <div class="block hot"><h4>Safety chain</h4><p>Latched E-stop cuts VMOT, 10 ms watchdog one-shot, enable gate.</p></div>
       </div>
@@ -169,7 +171,7 @@ section: home
         <source src="{{root}}assets/video/beitlab_balance_robot_v1_promo.mp4" type="video/mp4">
       </video>
     </div>
-    <div class="film-cap"><span>Promo film · 56 s · 19.5 MB</span><a href="docs/robot/assembly.html#video">Watch the step-by-step assembly guide →</a></div>
+    <div class="film-cap"><span>Promo film · 61 s · 20.6 MB</span><a href="docs/robot/assembly.html#video">Watch the step-by-step assembly guide →</a></div>
   </div>
 </section>
 
@@ -182,10 +184,10 @@ section: home
       <p style="margin-top:22px"><span class="badge ok">Done</span> <span class="badge wip">In progress</span> <span class="badge todo">Next</span></p>
     </div>
     <ol class="timeline">
-      <li class="done"><span class="when">Nov 2026 · done</span><h3>Robotics Board v0.5 → v0.8 routed and frozen</h3>
-        <p>Four revisions: routed 4-layer layout, accessory power outputs, corrected labels, then every part re-sourced for production assembly. Zero DRC errors, zero schematic mismatches.</p></li>
+      <li class="done"><span class="when">Nov 2026 · done</span><h3>Robotics Board v0.5 → v0.11 routed; v0.10 frozen</h3>
+        <p>Seven revisions: routed 4-layer layout, accessory power outputs, every part re-sourced for production assembly, general-purpose port names, a maintained ON/OFF master switch (v0.10, frozen), and that switch moved to a rocker in the cover with two aux servo ports for the head (v0.11, working). Zero DRC errors, zero schematic mismatches.</p></li>
       <li class="done"><span class="when">Nov 2026 · done</span><h3>Body v1 with four-bar legs designed and checked</h3>
-        <p>Parametric CadQuery model, interference-checked across the full leg sweep, with a mounted model of all 134 pieces of hardware.</p></li>
+        <p>Parametric CadQuery model, interference-checked across the full leg sweep, with a mounted model of all 178 pieces of hardware, including the head and the chest camera.</p></li>
       <li class="done"><span class="when">Nov 2026 · done</span><h3>Digital twin and training</h3>
         <p>URDF and ROS 2 description from the CAD, an Isaac Sim asset, the firmware LQR in the loop, and Isaac Lab balance and velocity-tracking policies.</p></li>
       <li class="now"><span class="when">Now</span><h3>First boards and first print</h3>
