@@ -1,6 +1,6 @@
 <!--meta
 title: Robotics you can watch, from high school to a master's
-description: Balance Robot v1 is one small dynamic robot. Its crouch stays smooth and readable, so the same mechanism, board and controller can teach robotics from high school through a master's.
+description: Robots are arriving faster than the people who can build and run them. Why one small, readable robot can teach robotics from high school through a master's.
 layout: blog
 section: blog
 og_type: article
@@ -11,7 +11,7 @@ image_alt: Balance Robot v1 crouching and standing. The four-bar legs fold smoot
 <p class="kicker"><span class="eyebrow">Learning</span></p>
 <h1>Robotics you can watch, from high school to a master's</h1>
 <p class="byline"><time datetime="2026-11-20">20 November 2026</time><span>Beitlab Robotics</span></p>
-<p class="lead">A dynamic robot is usually taught in pieces that never meet. One course gets the mechanism. Another gets the circuit. A third gets the controller, on a plant the student cannot see. Balance Robot v1 is built the other way: one small wheeled biped, with the motion, the board and the control in view together.</p>
+<p class="lead">Most of us remember the moment a machine first made sense. A gear turned another gear, a line of code moved something real, and the world got a little less mysterious. We built Balance Robot v1 to make that moment easier to reach, and to keep it going long after the first lesson.</p>
 
 <figure class="hero-gif">
   <img src="{{root}}assets/blog/learning-crouch.gif" width="1200" height="627" alt="Balance Robot v1 crouching and standing. The four-bar legs fold smoothly and the wheels stay under the hips.">
@@ -22,29 +22,47 @@ image_alt: Balance Robot v1 crouching and standing. The four-bar legs fold smoot
   <a class="btn" href="{{root}}assets/blog/learning-crouch.gif">Open the motion GIF</a>
 </div>
 
-<p>The clip is a render of the production model. The first boards and the first printed body are still ahead of us. What the clip is for is the character of the movement. It is slow enough to read with your eyes, and complete enough that a learner can ask a harder question of the same robot.</p>
+<p>Let's be honest about the clip first. It is a render of the production model. The first boards and the first printed body are still ahead of us. We share it anyway because it shows the thing we care about most: the movement is slow enough to follow with your eyes, and there is a lot going on underneath it.</p>
 
-<h2 id="one-environment">One environment, several depths</h2>
-<p>A balancing biped holds a lot of complexity. On this platform that complexity sits in one place, and a class can stop at the layer it is ready for.</p>
-<p>A high-school group can stay with what they can see. An undergraduate course can open the loops. A master's project can change the model and the behaviour on the same machine. The names of the parts do not change between those rooms. That is the property that makes the environment useful: it is understandable at the door, and it stays customizable as the questions get sharper.</p>
+<h2 id="why-now">The robots are arriving faster than the people</h2>
+<p>Robots are no longer a far-off idea. In 2025, factories around the world installed about 603,000 industrial robots. That was the first year above 600,000, and more than double the number of ten years before, according to the <a href="https://ifr.org/worldrobotics/report-2026" target="_blank" rel="noopener">International Federation of Robotics</a>. The next wave is already being planned. Goldman Sachs now projects roughly 890,000 humanoid robots by 2030 and about 6.5 million by 2035, a market it puts near $138 billion (<a href="https://www.investing.com/news/stock-market-news/goldman-sachs-raises-humanoid-robot-forecast-sees-auto-role-93CH-4882346" target="_blank" rel="noopener">Investing.com</a>). A forecast is not an order book. The direction is still hard to miss.</p>
+<p>The harder part is the people. In the World Economic Forum's <a href="https://www.weforum.org/publications/the-future-of-jobs-report-2025/" target="_blank" rel="noopener">Future of Jobs Report 2025</a>, 58% of employers expect robots and autonomous systems to transform their business by 2030. The same report does not pretend this is painless. It expects robotics to remove more jobs than it creates, a net decline of about 5 million. It also lists robotics among the top drivers for seven of the ten fastest-growing jobs, and says it is raising demand for programming and systems thinking.</p>
+<p>So the jobs change shape. Someone has to design these machines, program them, keep them safe and fix them when they fail. In the United States alone, Deloitte and The Manufacturing Institute estimate that manufacturing could need up to 3.8 million new workers between 2024 and 2033, and that about 1.9 million of those jobs could go unfilled without the right skills (<a href="https://themanufacturinginstitute.org/wp-content/uploads/2024/04/Digital%5FSkills%5FReport%5FApril%5F2024.pdf" target="_blank" rel="noopener">Deloitte and The Manufacturing Institute, 2024</a>). The same study found a 75% rise in five years in demand for simulation skills.</p>
+<p>That gap will not be closed by one course or one level of school. It needs people who start early, keep going, and can see how the pieces fit. That is the part we think a robot can help with.</p>
 
-<h2 id="high-school">High school: watch the mechanism, then name it</h2>
-<p>Start with the crouch. Two legs, two wheels, a body that gets shorter, and the wheels do not wander out from under it. That is a four-bar linkage. The knee stays close to twice the hip angle, and the wheel stays within a millimetre of under the hip across the whole sweep. A student can see the rule before anyone writes it down.</p>
-<p>The next questions are ordinary and real. What is holding the robot up? What happens if a motor keeps spinning? Why is there a red stop on the cover, and why do the motors stay off until a safety chain is armed? Those are the right first lessons: a mechanism, an actuator, a sensor, and a reason to be careful. They ask for a machine you can point at. They do not ask for a graduate course.</p>
+<h2 id="pieces">Robotics is usually taught in pieces</h2>
+<p>A dynamic robot is often taught in pieces that never meet. The mechanism lives in one class. The circuit lives in another. The controller shows up on a whiteboard, balancing a model nobody can touch. Each piece makes sense on its own. The robot, the thing that made you curious in the first place, is somehow missing.</p>
+<p>Balance Robot v1 is built the other way: one small wheeled biped, with the motion, the board and the control in view together. A class can stop at the depth it is ready for. The names of the parts do not change from one room to the next. That is what we mean by easy to understand and still open to change. Nothing has to be hidden to keep it simple.</p>
 
-<h2 id="undergraduate">Undergraduate: the same motion, now as a model</h2>
-<p>The crouch that was a picture becomes a model. Leg length is mostly a height, because the wheel was kept under the hip, so the balance problem is the one the textbooks draw: a body, an angle, two wheels. The hip servos set that height. Two direct-drive gimbal motors, with no gearbox, hold the body upright. A sensor on each knee measures the leg, so the controller does not have to trust the command. An IMU on the board measures the body.</p>
-<p>The rates are part of the lesson. The field-oriented drive runs fast, at about 10 kHz. The balance law, an LQR on the board's real-time core, runs at 400 Hz. Linux on the same computer sends intent. A student can be shown which loop is allowed to be late, and which one is not, on a diagram that matches the robot they just watched.</p>
-<p>Simulation sits beside that hardware story. The URDF, the ROS 2 description and the Isaac Lab tasks come from the same CAD as the crouch. A course can break the model on purpose, in simulation, before anyone arms the safety chain.</p>
+<h2 id="high-school">High school: watch first, then name it</h2>
+<p>Picture a group gathered around the robot as it crouches. Two legs fold, the body gets shorter, and the wheels stay right under it. Someone asks why the wheels don't slide out. That question is the lesson. The answer is a four-bar linkage: the knee stays close to twice the hip angle, and the wheel stays within a millimetre of under the hip across the whole movement. Students can see the rule before anyone writes it on the board.</p>
+<p>The next questions come naturally. What keeps it standing? What happens if a motor keeps spinning? Why is there a red stop button on top, and why do the motors stay off until a safety chain is armed? Those are good first lessons: a mechanism, an actuator, a sensor, and a reason to be careful. They need a real machine to point at, not a graduate course.</p>
 
-<h2 id="masters">A master's: change the question, keep the robot</h2>
-<p>At this level the model is open to argument. Mass, inertia and delay are numbers you can measure against. The head and the chest camera raise the centre of mass and slow the fall. That is a specific claim about a specific robot, and it is a claim a project can test.</p>
-<p>Policies trained in Isaac Lab are meant to sit beside the LQR, and the LQR stays explainable. Custom work stays on this same machine: a different height, a different gain, a camera behaviour, a locomotion question that is still a balance question. The mechanical files and the schematics stay with Beitlab. This is a product. The learning path is what we want to open, so a lab can go deep on one robot.</p>
+<h2 id="undergraduate">University: the same motion, now as a model</h2>
+<p>The crouch that was a picture now becomes a model. Because the wheel stays under the hip, leg length acts mostly like height, so the balance problem looks like the one in the textbook: a body, an angle, two wheels. The hip servos set the height. Two direct-drive motors with no gearbox keep the body upright. A sensor on each knee measures the leg, so the controller does not have to trust the command, and an IMU on the board measures the body.</p>
+<p>Timing becomes something you can feel. The motor drive runs at about 10 kHz. The balance controller, an LQR on the board's real-time core, runs at 400 Hz. Linux on the same computer sends the goals. Students can see which loop is allowed to be late and which one is not, on a diagram that matches the robot they just watched.</p>
+<p>Simulation sits right beside the hardware. The robot description for ROS 2 and the Isaac Lab training tasks come from the same CAD as the crouch. A class can break things on purpose in simulation first, which is cheaper, safer, and the kind of simulation skill industry says it needs more of.</p>
 
-<h2 id="share">Share the motion</h2>
-<p>The picture for this article is the crouch itself, a GIF at 1200×627, the size LinkedIn asks for on a link card. The card shows the opening pose. The article plays the whole sweep. If you want the feed to move, attach <a href="{{root}}assets/blog/learning-crouch.gif">the GIF</a> to the post along with the link.</p>
-<p>If you teach, or you remember being taught, and you want this kind of machine in the room, <a href="{{linkedin}}" target="_blank" rel="noopener">connect on the Beitlab LinkedIn page</a> and tell us the level. The <a href="{{root}}docs/robot/index.html">robot overview</a> has the specifications behind the crouch.</p>
+<h2 id="masters">Master's: change the question, keep the robot</h2>
+<p>At this level the model itself is open to argument. Mass, inertia and delay become numbers you measure, not numbers you assume. The head and the chest camera raise the centre of mass and slow the fall. That is a specific claim about a specific robot, and a project can test it.</p>
+<p>Policies trained in Isaac Lab are meant to run beside the LQR, while the LQR stays easy to explain. A thesis can try a new height, new gains, a camera behaviour or a locomotion question that is still, at heart, a balance question, without starting over on a new machine. Balance Robot v1 is a product, and the mechanical files and schematics stay with Beitlab. What we want to open is the learning path.</p>
+
+<h2 id="why-one-robot">Why one robot, all the way up</h2>
+<p>Skills grow best when they have somewhere to land. A student who first watched the crouch in high school can meet the same robot again at university as a model, and again in a master's project as an open question. Each time the robot is familiar, and each time it asks for more. That continuity is how curiosity turns into competence.</p>
+<p>The world is going to need many more people who are comfortable with machines that move, people who can think in systems, program with care and keep a robot safe around humans. We would like to help a few more of them get started.</p>
+
+<h2 id="share">Share it, and tell us where you teach</h2>
+<p>The picture for this article is the crouch itself, a GIF at 1200×627, the size LinkedIn uses for link cards. The card shows the opening pose, and the article plays the whole movement. If you want the motion in the feed, attach <a href="{{root}}assets/blog/learning-crouch.gif">the GIF</a> to your post along with the link.</p>
+<p>If you teach, or you remember the teacher who made robotics click for you, <a href="{{linkedin}}" target="_blank" rel="noopener">connect with us on LinkedIn</a> and tell us the level you work with. The <a href="{{root}}docs/robot/index.html">robot overview</a> has the specifications behind the crouch.</p>
 <div class="share-row">
   <a class="btn primary" href="https://www.linkedin.com/sharing/share-offsite/?url={{share_url}}" target="_blank" rel="noopener">Share this article on LinkedIn</a>
   <a class="btn" href="{{linkedin}}" target="_blank" rel="noopener">Connect with Beitlab</a>
 </div>
+
+<h2 id="sources">Sources</h2>
+<ul class="small">
+  <li><a href="https://ifr.org/worldrobotics/report-2026" target="_blank" rel="noopener">International Federation of Robotics, World Robotics 2026</a>: industrial robot installations in 2025.</li>
+  <li><a href="https://www.weforum.org/publications/the-future-of-jobs-report-2025/" target="_blank" rel="noopener">World Economic Forum, The Future of Jobs Report 2025</a>: employer expectations, job growth and displacement, and skills demand.</li>
+  <li><a href="https://themanufacturinginstitute.org/wp-content/uploads/2024/04/Digital%5FSkills%5FReport%5FApril%5F2024.pdf" target="_blank" rel="noopener">Deloitte and The Manufacturing Institute, Taking charge (2024)</a>: the US manufacturing talent gap through 2033.</li>
+  <li><a href="https://www.investing.com/news/stock-market-news/goldman-sachs-raises-humanoid-robot-forecast-sees-auto-role-93CH-4882346" target="_blank" rel="noopener">Investing.com, Goldman Sachs raises humanoid robot forecast</a>: humanoid unit and market forecasts for 2030 and 2035.</li>
+</ul>
