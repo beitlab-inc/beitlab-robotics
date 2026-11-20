@@ -1,0 +1,50 @@
+<!--meta
+title: Robotics you can watch, from high school to a master's
+description: Balance Robot v1 is one small dynamic robot. Its crouch stays smooth and readable, so the same mechanism, board and controller can teach robotics from high school through a master's.
+layout: blog
+section: blog
+og_type: article
+published: 2026-11-20
+image: assets/blog/learning-crouch.gif
+image_alt: Balance Robot v1 crouching and standing. The four-bar legs fold smoothly and the wheels stay under the hips.
+-->
+<p class="kicker"><span class="eyebrow">Learning</span></p>
+<h1>Robotics you can watch, from high school to a master's</h1>
+<p class="byline"><time datetime="2026-11-20">20 November 2026</time><span>Beitlab Robotics</span></p>
+<p class="lead">A dynamic robot is usually taught in pieces that never meet. One course gets the mechanism. Another gets the circuit. A third gets the controller, on a plant the student cannot see. Balance Robot v1 is built the other way: one small wheeled biped, with the motion, the board and the control in view together.</p>
+
+<figure class="hero-gif">
+  <img src="{{root}}assets/blog/learning-crouch.gif" width="1200" height="627" alt="Balance Robot v1 crouching and standing. The four-bar legs fold smoothly and the wheels stay under the hips.">
+  <figcaption>The designed crouch, hip 15° to 55°. The legs fold, the wheels stay under the hips, and the body settles. A render of the production model.</figcaption>
+</figure>
+<div class="share-row">
+  <a class="btn primary" href="https://www.linkedin.com/sharing/share-offsite/?url={{share_url}}" target="_blank" rel="noopener">Share this article on LinkedIn</a>
+  <a class="btn" href="{{root}}assets/blog/learning-crouch.gif">Open the motion GIF</a>
+</div>
+
+<p>The clip is a render of the production model. The first boards and the first printed body are still ahead of us. What the clip is for is the character of the movement. It is slow enough to read with your eyes, and complete enough that a learner can ask a harder question of the same robot.</p>
+
+<h2 id="one-environment">One environment, several depths</h2>
+<p>A balancing biped holds a lot of complexity. On this platform that complexity sits in one place, and a class can stop at the layer it is ready for.</p>
+<p>A high-school group can stay with what they can see. An undergraduate course can open the loops. A master's project can change the model and the behaviour on the same machine. The names of the parts do not change between those rooms. That is the property that makes the environment useful: it is understandable at the door, and it stays customizable as the questions get sharper.</p>
+
+<h2 id="high-school">High school: watch the mechanism, then name it</h2>
+<p>Start with the crouch. Two legs, two wheels, a body that gets shorter, and the wheels do not wander out from under it. That is a four-bar linkage. The knee stays close to twice the hip angle, and the wheel stays within a millimetre of under the hip across the whole sweep. A student can see the rule before anyone writes it down.</p>
+<p>The next questions are ordinary and real. What is holding the robot up? What happens if a motor keeps spinning? Why is there a red stop on the cover, and why do the motors stay off until a safety chain is armed? Those are the right first lessons: a mechanism, an actuator, a sensor, and a reason to be careful. They ask for a machine you can point at. They do not ask for a graduate course.</p>
+
+<h2 id="undergraduate">Undergraduate: the same motion, now as a model</h2>
+<p>The crouch that was a picture becomes a model. Leg length is mostly a height, because the wheel was kept under the hip, so the balance problem is the one the textbooks draw: a body, an angle, two wheels. The hip servos set that height. Two direct-drive gimbal motors, with no gearbox, hold the body upright. A sensor on each knee measures the leg, so the controller does not have to trust the command. An IMU on the board measures the body.</p>
+<p>The rates are part of the lesson. The field-oriented drive runs fast, at about 10 kHz. The balance law, an LQR on the board's real-time core, runs at 400 Hz. Linux on the same computer sends intent. A student can be shown which loop is allowed to be late, and which one is not, on a diagram that matches the robot they just watched.</p>
+<p>Simulation sits beside that hardware story. The URDF, the ROS 2 description and the Isaac Lab tasks come from the same CAD as the crouch. A course can break the model on purpose, in simulation, before anyone arms the safety chain.</p>
+
+<h2 id="masters">A master's: change the question, keep the robot</h2>
+<p>At this level the model is open to argument. Mass, inertia and delay are numbers you can measure against. The head and the chest camera raise the centre of mass and slow the fall. That is a specific claim about a specific robot, and it is a claim a project can test.</p>
+<p>Policies trained in Isaac Lab are meant to sit beside the LQR, and the LQR stays explainable. Custom work stays on this same machine: a different height, a different gain, a camera behaviour, a locomotion question that is still a balance question. The mechanical files and the schematics stay with Beitlab. This is a product. The learning path is what we want to open, so a lab can go deep on one robot.</p>
+
+<h2 id="share">Share the motion</h2>
+<p>The picture for this article is the crouch itself, a GIF at 1200×627, the size LinkedIn asks for on a link card. The card shows the opening pose. The article plays the whole sweep. If you want the feed to move, attach <a href="{{root}}assets/blog/learning-crouch.gif">the GIF</a> to the post along with the link.</p>
+<p>If you teach, or you remember being taught, and you want this kind of machine in the room, <a href="{{linkedin}}" target="_blank" rel="noopener">connect on the Beitlab LinkedIn page</a> and tell us the level. The <a href="{{root}}docs/robot/index.html">robot overview</a> has the specifications behind the crouch.</p>
+<div class="share-row">
+  <a class="btn primary" href="https://www.linkedin.com/sharing/share-offsite/?url={{share_url}}" target="_blank" rel="noopener">Share this article on LinkedIn</a>
+  <a class="btn" href="{{linkedin}}" target="_blank" rel="noopener">Connect with Beitlab</a>
+</div>

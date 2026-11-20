@@ -58,10 +58,8 @@ needs its copy first. Do not copy manufacturing files into this repository.
 
 1. In the repository on GitHub, open **Settings → Pages** and set **Source** to **GitHub Actions**.
 2. Push. The site appears at `https://<user>.github.io/<repo>/`.
-3. **Custom domain, later:** in Settings → Pages → Custom domain, enter the domain and add the
-   DNS records GitHub shows (a `CNAME` to `<user>.github.io` for a subdomain, or the four `A`
-   records for an apex domain), then tick **Enforce HTTPS**. Set `"base_url"` in `site.json` to
-   `https://<domain>` so the canonical links, `sitemap.xml` and the 404 page use it. With an
-   Actions deploy no `CNAME` file is needed.
+3. **Custom domain:** `base_url` in `site.json` is `https://robotics.beitlab.com`. Canonical links,
+   `sitemap.xml`, `robots.txt` and the share image all use that absolute address, which LinkedIn
+   needs in order to fetch `og:image`. With an Actions deploy no `CNAME` file is needed.
 
 GitHub Pages allows 1 GB per site and 100 MB per file. The promo film is the largest file published here.

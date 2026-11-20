@@ -33,10 +33,12 @@ import json
 import os
 import re
 import shutil
+import struct
 import sys
 from datetime import date
 from functools import partial
 from pathlib import Path
+from urllib.parse import quote
 
 ROOT = Path(__file__).resolve().parents[2]
 ROBOT_ROOT = Path(os.environ.get("ROBOT_ROOT", ROOT.parent / "Balanced_robot")).resolve()
@@ -52,6 +54,33 @@ OPTIONAL_RE = re.compile(r"<!--optional-->(.*?)<!--/optional-->", re.S)
 PLACEHOLDER_RE = re.compile(r"\{\{\s*([a-z_]+)(?::([^}]+))?\s*\}\}")
 H2_RE = re.compile(r'<h2 id="([^"]+)"[^>]*>(.*?)</h2>', re.S)
 TAG_RE = re.compile(r"<[^>]+>")
+
+
+def image_info(path: Path) -> tuple[str, int, int]:
+    """MIME type and pixel size for a GIF, PNG or JPEG. The LinkedIn preview needs both."""
+    data = path.read_bytes()
+    if data.startswith((b"GIF87a", b"GIF89a")):
+        width, height = struct.unpack_from("<HH", data, 6)
+        return "image/gif", width, height
+    if data.startswith(b"\x89PNG\r\n\x1a\n"):
+        width, height = struct.unpack_from(">II", data, 16)
+        return "image/png", width, height
+    if data.startswith(b"\xff\xd8"):
+        i = 2
+        while i + 8 < len(data):
+            if data[i] != 0xFF:
+                i += 1
+                continue
+            marker = data[i + 1]
+            if marker in (0xC0, 0xC1, 0xC2, 0xC3):
+                height, width = struct.unpack_from(">HH", data, i + 5)
+                return "image/jpeg", width, height
+            if marker in (0xD8, 0x01) or 0xD0 <= marker <= 0xD9:
+                i += 2
+                continue
+            length = struct.unpack_from(">H", data, i + 2)[0]
+            i += 2 + length
+    sys.exit(f"{path}: not a GIF, PNG or JPEG")
 
 
 def human_size(n: int) -> str:
@@ -217,8 +246,45 @@ class Builder:
         linkedin = html.escape(cfg.get("linkedin_url") or "")
         linkedin_link = (f'<a class="nav-ext" href="{linkedin}" target="_blank" rel="noopener">LinkedIn</a>'
                          if linkedin else "")
-        canonical = (f'<link rel="canonical" href="{html.escape(cfg["base_url"].rstrip("/") + "/" + rel.removesuffix("index.html"))}">'
-                     if cfg.get("base_url") else "")
+        base = (cfg.get("base_url") or "").rstrip("/")
+        page_path = rel.removesuffix("index.html")
+        page_url = f"{base}/{page_path}" if base else ""
+        canonical = (f'<link rel="canonical" href="{html.escape(page_url)}">' if page_url else "")
+        image_rel = (meta.get("image") or "assets/img/hero-robot.jpg").lstrip("/")
+        image_path = (SITE / image_rel).resolve()
+        if not image_path.is_relative_to(SITE) or not image_path.is_file():
+            sys.exit(f"{rel}: image {image_rel} is missing")
+        image_type, image_w, image_h = image_info(image_path)
+        image_url = f"{base}/{image_rel}" if base else root + image_rel
+        image_alt = meta.get("image_alt") or meta["title"]
+        published = meta.get("published", "")
+        article_meta = ""
+        json_ld = ""
+        if published:
+            article_meta = (
+                f'<meta property="article:published_time" content="{html.escape(published)}">\n'
+                f'<meta property="article:modified_time" content="{html.escape(published)}">\n'
+                f'<meta property="article:author" content="{html.escape(cfg["name"])}">\n'
+                f'<meta property="article:publisher" content="{html.escape(cfg["name"])}">\n'
+                f'<meta property="article:section" content="Robotics education">'
+            )
+            payload = {
+                "@context": "https://schema.org",
+                "@type": "BlogPosting",
+                "headline": meta["title"],
+                "description": meta["description"],
+                "image": {"@type": "ImageObject", "url": image_url, "width": image_w, "height": image_h},
+                "datePublished": published,
+                "dateModified": published,
+                "author": {"@type": "Organization", "name": cfg["name"], "url": f"{base}/" if base else linkedin},
+                "publisher": {
+                    "@type": "Organization",
+                    "name": cfg["name"],
+                    "logo": {"@type": "ImageObject", "url": f"{base}/assets/img/favicon.svg" if base else "assets/img/favicon.svg"},
+                },
+                "mainEntityOfPage": page_url or image_url,
+            }
+            json_ld = '<script type="application/ld+json">' + json.dumps(payload, ensure_ascii=False).replace("<", "\\u003c") + "</script>"
         values = {
             "title": html.escape(meta["title"]),
             "description": html.escape(meta["description"]),
@@ -229,6 +295,16 @@ class Builder:
             "linkedin": linkedin,
             "linkedin_link": linkedin_link,
             "canonical": canonical,
+            "og_type": html.escape(meta.get("og_type") or "website"),
+            "og_image": html.escape(image_url),
+            "og_image_type": image_type,
+            "og_image_width": str(image_w),
+            "og_image_height": str(image_h),
+            "og_image_alt": html.escape(image_alt),
+            "og_url": f'<meta property="og:url" content="{html.escape(page_url)}">' if page_url else "",
+            "share_url": quote(page_url, safe="") if page_url else "",
+            "article_meta": article_meta,
+            "json_ld": json_ld,
             "section": meta.get("section", ""),
             "page": rel,
         }
@@ -240,7 +316,7 @@ class Builder:
             "pager": self.fill(self.pager(rel), values, root, rel),
             "nav_" + meta.get("section", "none"): ' aria-current="page"',
         })
-        for key in ("nav_home", "nav_robot", "nav_board", "nav_docs"):
+        for key in ("nav_home", "nav_robot", "nav_board", "nav_docs", "nav_blog"):
             values.setdefault(key, "")
         page = self.fill(layout.replace("{{content}}", "\0CONTENT\0"), values, root, f"{rel} (layout)")
         page = page.replace("\0CONTENT\0", content)
@@ -292,6 +368,7 @@ class Builder:
             (OUT / "sitemap.xml").write_text(
                 '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
                 + "".join(f"  <url><loc>{base}/{u}</loc></url>\n" for u in urls) + "</urlset>\n")
+            (OUT / "robots.txt").write_text(f"User-agent: *\nAllow: /\nSitemap: {base}/sitemap.xml\n")
         errors = self.check_links()
         total = sum(f.stat().st_size for f in OUT.rglob("*") if f.is_file())
         print(f"site: {len(list(OUT.rglob('*.html')))} pages, {len(self.copied)} repository files, "
