@@ -19,11 +19,14 @@ self-contained for static hosting. See [site authoring](site/README.md).
 - `tools/site/build_site.py`: static builder and link checker (Python standard library).
 - `.github/workflows/pages.yml`: GitHub Pages build/deploy workflow.
 
-The builder reads `hardware/...` product assets from `../Robotics_board` and
-`design/...` / `docs/...` assets from `../Balanced_robot` when those projects exist. Otherwise
-it uses the copies in `site/product/`, which the Pages workflow relies on. Override the sibling
-locations with `ROBOT_ROOT` and `BOARD_ROOT`. `make test` checks source routing and rejects asset
-paths that escape their project.
+The builder reads published pictures from `../Robotics_board` and `../Balanced_robot` when those
+projects exist. Otherwise it uses the copies in `site/product/`, which the Pages workflow relies on.
+Override the sibling locations with `ROBOT_ROOT` and `BOARD_ROOT`. `make test` checks source routing
+and rejects asset paths that escape their project.
+
+The public site is general documentation and specifications, plus the renders those pages show.
+STEP models, printed parts, the hardware list, schematics and the engineering book are not part of
+this repository.
 
 ## GitHub Pages
 

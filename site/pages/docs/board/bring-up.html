@@ -133,4 +133,4 @@ section: board
 
 <h2 id="stage-7">Stage 7 · Battery and thermal soak</h2>
 <p>Connect the pack with the switch at OFF, then switch ON: the board's input capacitance charges at turn-on through Q4, and that current is not limited, so measure it on the bench first. On a v0.9 or earlier board, expect a spark at the battery connection instead: use an anti-spark lead, a pre-charge resistor or a battery switch closed last. Run both motors at a moderate held torque with both servos holding a crouch for 10 minutes. Log VBUS, VMOT, VSERVO and +5V, and check the DRV8313s, the bucks, D5, Q1, Q2 and F1. Capture peak VBUS and VMOT during deceleration and E-stop. Only then does the robot go on the floor.</p>
-<div class="callout ok"><span class="title">Done</span><p>A board that passes stage 7 is ready for <a href="../robot/assembly.html">assembly into the robot</a> and supervised balancing.</p></div>
+<div class="callout ok"><span class="title">Done</span><p>A board that passes stage 7 is ready to go into Balance Robot v1, with supervised balancing.</p></div>

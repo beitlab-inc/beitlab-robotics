@@ -2,7 +2,7 @@
 """Build the Beitlab Robotics website (site/ -> build/site/) for GitHub Pages.
 
 Sources live in site/:
-  site.json            name, optional repo_url and base_url, and the docs navigation
+  site.json            name, optional repo_url, linkedin_url and base_url, and the docs navigation
   _layouts/*.html      page shells; {{content}}, {{title}}, {{root}} ... are filled in here
   pages/**/*.html      one file per page, starting with a <!--meta ... --> block
   assets/              CSS, JS and images, copied as they are
@@ -214,6 +214,9 @@ class Builder:
             root = cfg["base_url"].rstrip("/") + "/" if cfg.get("base_url") else "/"
         repo_link = (f'<a class="nav-ext" href="{html.escape(cfg["repo_url"])}">GitHub</a>'
                      if cfg.get("repo_url") else "")
+        linkedin = html.escape(cfg.get("linkedin_url") or "")
+        linkedin_link = (f'<a class="nav-ext" href="{linkedin}" target="_blank" rel="noopener">LinkedIn</a>'
+                         if linkedin else "")
         canonical = (f'<link rel="canonical" href="{html.escape(cfg["base_url"].rstrip("/") + "/" + rel.removesuffix("index.html"))}">'
                      if cfg.get("base_url") else "")
         values = {
@@ -223,6 +226,8 @@ class Builder:
             "year": str(date.today().year),
             "built": date.today().isoformat(),
             "repo_link": repo_link,
+            "linkedin": linkedin,
+            "linkedin_link": linkedin_link,
             "canonical": canonical,
             "section": meta.get("section", ""),
             "page": rel,
@@ -307,7 +312,6 @@ def make_posters() -> None:
     jobs = [  # (video, second, crop x0, y0, x1, y1 in 1920x1080, width, output)
         ("beitlab_balance_robot_v1_promo.mp4", 52.0, 360, 30, 1560, 990, 1200, "hero-robot.jpg"),       # hero (46.5-53.5 s), front view
         ("beitlab_balance_robot_v1_promo.mp4", 52.0, 0, 0, 1920, 1080, 1280, "promo-poster.jpg"),
-        ("beitlab_balance_robot_v1_assembly_guide.mp4", 182.0, 0, 0, 1920, 1080, 1280, "assembly-poster.jpg"),   # the final orbit
     ]
     for name, t, x0, y0, x1, y1, width, out in jobs:
         cap = cv2.VideoCapture(str(video / name))

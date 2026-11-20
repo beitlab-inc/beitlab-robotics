@@ -1,6 +1,7 @@
 {
   "name": "Beitlab Robotics",
   "repo_url": "",
+  "linkedin_url": "https://www.linkedin.com/company/beitlab",
   "base_url": "",
   "docs_nav": [
     {
@@ -20,8 +21,7 @@
     {
       "title": "Balance Robot v1",
       "items": [
-        {"page": "docs/robot/index.html", "label": "Robot overview"},
-        {"page": "docs/robot/assembly.html", "label": "Assembly guide"}
+        {"page": "docs/robot/index.html", "label": "Robot overview"}
       ]
     }
   ]

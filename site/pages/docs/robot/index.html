@@ -70,7 +70,7 @@ section: robot
 <!--/optional-->
 
 <h2 id="head">Head and AI camera</h2>
-<p>The head is a 116 × 62 × 44 mm visor with a black inset face and two ringed eyes. A standard 25T servo, the hips' type, turns it ±90° from a black shroud on the cover. An MG90S inside tilts it ±25° and only turns it: an 8 mm pin on the other side carries the left side. The DFRobot DFR1154 ESP32-S3 AI camera, with a 160° lens, IR LEDs, a microphone and a speaker amplifier, sits behind a grille panel on the chest. On board v0.11 the pan and tilt leads plug into J27 (AUX1) and J28 (AUX2). A separate head board, fed from the VBUS and 5 V accessory outputs and talking on I²C, remains the option when the head must track on its own. Both are set out in <a href="{{repo:hardware/HEAD_ELECTRONICS.md}}">HEAD_ELECTRONICS.md</a>.</p>
+<p>The head is a 116 × 62 × 44 mm visor with a black inset face and two ringed eyes. A standard 25T servo, the hips' type, turns it ±90° from a black shroud on the cover. An MG90S inside tilts it ±25° and only turns it: an 8 mm pin on the other side carries the left side. The DFRobot DFR1154 ESP32-S3 AI camera, with a 160° lens, IR LEDs, a microphone and a speaker amplifier, sits behind a grille panel on the chest. On board v0.11 the pan and tilt leads plug into J27 (AUX1) and J28 (AUX2). A separate head board, fed from the VBUS and 5 V accessory outputs and talking on I²C, remains the option when the head must track on its own. </p>
 <figure>
   <img src="{{repo:design/body_v1/out/head/renders/head_views.png}}" alt="The visor head on its pan/tilt neck and the DFR1154 chest camera, in several views" loading="lazy">
   <figcaption>The head and the chest camera: front, the neck and tilt servo with the cap off, panned and tilted, the camera behind its panel, and side and rear views. Every view is checked for collisions over the whole pan/tilt range.</figcaption>
@@ -96,12 +96,8 @@ section: robot
 </ul>
 
 <h2 id="sim">Simulation</h2>
-<p>The URDF, ROS 2 description and Isaac Sim asset are generated from the same CAD. The firmware controller runs in the loop on the host, and Isaac Lab tasks train balance, velocity-tracking and leg policies with terrain curricula and domain randomization. Policies export to C arrays for comparison with the LQR. To view the model on your PC, see <a href="../getting-started.html#ros2">First steps</a>.</p>
+<p>The URDF, ROS 2 description and Isaac Sim asset are generated from the same CAD. The firmware controller runs in the loop on the host, and Isaac Lab tasks train balance, velocity-tracking and leg policies with terrain curricula and domain randomization. Policies are compared with the LQR before they go on the robot.</p>
 
-<h2 id="files">CAD files</h2>
-<div class="cards">
-  <a class="card" href="{{repo:design/body_v1/out/options/option_B/robot_option_B.step}}"><span class="tag">STEP</span><h4>Whole robot</h4><p>Option B at hip 30° with the head and chest camera, without the board. Opens in Onshape and FreeCAD.</p><span class="size">STEP · {{size:design/body_v1/out/options/option_B/robot_option_B.step}}</span></a>
-  <!--optional--><a class="card" href="{{repo:design/body_v1/out/options/option_B/robot_option_B_mounted.step}}"><span class="tag">STEP</span><h4>Fully mounted</h4><p>The same, with all 178 screws, inserts, nuts, bearings, washers, standoffs and magnets.</p><span class="size">STEP · {{size:design/body_v1/out/options/option_B/robot_option_B_mounted.step}}</span></a><!--/optional-->
-  <a class="card" href="{{repo:design/body_v1/out/options/option_B/hardware_bom.md}}"><span class="tag">BOM</span><h4>Hardware list</h4><p>Every bought part in the mounted model, counted and located.</p><span class="size">Text · {{size:design/body_v1/out/options/option_B/hardware_bom.md}}</span></a>
-  <a class="card" href="assembly.html#print"><span class="tag">STL</span><h4>Printed parts</h4><p>Every part in print orientation, with quantities and notes.</p></a>
-</div>
+<h2 id="product">The product</h2>
+<p>Balance Robot v1 is a Beitlab product. STEP models, the printed-part files and the hardware list are not published.</p>
+<p><a class="btn primary" href="{{linkedin}}" target="_blank" rel="noopener">Connect on LinkedIn</a></p>

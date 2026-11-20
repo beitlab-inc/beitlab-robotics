@@ -14,34 +14,24 @@ make site-serve    # the same, then serve it on http://localhost:8000
 | `site.json` | Site name, optional `repo_url` (adds a GitHub link to the header) and `base_url`, and the docs sidebar order |
 | `_layouts/` | Page shells (`home.html`, `docs.html`) and shared fragments (`head`, `header`, `footer`) |
 | `pages/` | One HTML file per page, each starting with a `<!--meta ... -->` block (title, description, layout, section) |
-| `assets/` | CSS, JS, the favicon, the video stills and the two videos (`assets/video/`) |
+| `assets/` | CSS, JS, the favicon, the video stills and the promo film (`assets/video/`) |
 
-The two videos live in `assets/video/` because the product repos are private and CI cannot read
-their `out/` folders. To refresh them, copy the new renders from `Balanced_robot/design/body_v1/out/video/`
-over the files there and update the sizes in `pages/index.html` and `pages/docs/robot/assembly.html`.
+The promo film lives in `assets/video/` because the product repos are private and CI cannot read
+their `out/` folders. To refresh it, copy the new render from `Balanced_robot/design/body_v1/out/video/`
+over the file there.
 
-Product files (renders, PDFs, STL and STEP models, the bill of materials, the book) are copies in
-`site/product/`, with the same paths as in the sibling projects. A local build reads the sibling
-project's generated file when it exists, so it always sees the latest output; otherwise it uses the
-copy. The build puts the file in `build/site/files/`. Pages refer to them like this:
+`site/product/` holds the pictures the public pages show: robot renders and photographs of the
+board. A local build reads the sibling project's file when it exists, and otherwise uses the copy.
+The build puts it in `build/site/files/`. Pages refer to a picture with `{{repo:PATH}}`.
+`{{root}}` is the relative path to the site root, so the site works under `user.github.io/<repo>/`
+and on a custom domain.
 
-- `{{repo:hardware/SUBSYSTEMS.pdf}}` is the URL of that file; `{{size:...}}` is its size.
-- `{{mdtable:design/body_v1/out/options/option_B/hardware_bom.md}}` renders a generated Markdown table.
-- `<!--optional--> ... <!--/optional-->` is left out, with a note, if a file inside it is missing.
-- `{{root}}` is the relative path to the site root, so the site works under
-  `user.github.io/<repo>/` and on a custom domain.
+Balance Robot v1 is a product for sale. This repository does not publish the STEP models, printed
+parts, hardware list, schematics, circuit drawings, subsystems report, engineering book, or the
+assembly film. Those stay in the private product projects.
 
-So after `make body`, `make renders`, `make videos` or a board rebuild, the next site build
-picks up the new outputs. The working schematic, subsystem report, circuit drawings and
-board renders come from the current revision (`hardware/kicad/balance_carrier/`,
-`hardware/SUBSYSTEMS.pdf`, `hardware/CIRCUITS.pdf`). The frozen schematic stays at
-`hardware/releases/carrier-v0.10/` until a newer revision is frozen; when that happens,
-update that path in `pages/docs/board/index.html`. Boards are sold only by Beitlab Robotics,
-so the site deliberately publishes no fabrication files (Gerbers, BOM, placement or
-assembly drawings).
-
-The video stills in `assets/img/` (`hero-robot.jpg`, `promo-poster.jpg`, `assembly-poster.jpg`)
-are cut from the videos in `assets/video/`: refresh them with `python3 tools/site/build_site.py --posters`
+The video stills in `assets/img/` (`hero-robot.jpg`, `promo-poster.jpg`)
+are cut from the promo film: refresh them with `python3 tools/site/build_site.py --posters`
 (needs opencv).
 
 The homepage robot is live: `assets/js/robot3d.js` poses the URDF with three.js (vendored in
@@ -62,9 +52,9 @@ uv run --no-project --with vtk==9.4.2 --with pillow --with numpy python tools/si
 ## Publishing
 
 `.github/workflows/pages.yml` builds from this repository alone and deploys website changes on
-`main` or `master`. After a product output changes, copy the file into `site/product/` (same path,
-e.g. `cp ../Balanced_robot/design/body_v1/out/options/option_B/hardware_bom.md site/product/design/body_v1/out/options/option_B/`)
-and commit it with the change. The build fails if a copy is missing, so a new reference needs its copy first.
+`main` or `master`. After a published render changes, copy that picture into `site/product/` at the
+same path and commit it with the change. The build fails if a copy is missing, so a new reference
+needs its copy first. Do not copy manufacturing files into this repository.
 
 1. In the repository on GitHub, open **Settings → Pages** and set **Source** to **GitHub Actions**.
 2. Push. The site appears at `https://<user>.github.io/<repo>/`.
@@ -74,5 +64,4 @@ and commit it with the change. The build fails if a copy is missing, so a new re
    `https://<domain>` so the canonical links, `sitemap.xml` and the 404 page use it. With an
    Actions deploy no `CNAME` file is needed.
 
-The built site is about 125 MB, mostly the two videos (78 MB) and the STEP models. GitHub Pages
-allows 1 GB per site and 100 MB per file.
+GitHub Pages allows 1 GB per site and 100 MB per file. The promo film is the largest file published here.
