@@ -139,6 +139,14 @@ section: board
   </tbody>
 </table></div>
 
+<h2 id="sdk">Development SDK</h2>
+<p>The Duo S on this board runs Linux on the A53 and your own FreeRTOS program on the C906. The <a href="https://github.com/beitlab-inc/beitlab-os-milkv-duo-sdk" target="_blank" rel="noopener"><code>duo-s-playground</code></a> repository is the framework and SDK for that: a flashable Linux image with Wi-Fi, a PlatformIO platform, the beitlabduino <code>setup()</code>/<code>loop()</code> library, hardware profiles that protect the carrier's pins, and examples. It works the same on the Robotics Board and on a standalone Milk-V Duo S.</p>
+<ul>
+  <li><a href="sdk.html">Get the SDK and flash it</a>: clone the repository, preconfigure Wi-Fi, write the microSD card and upload the first program.</li>
+  <li><a href="examples.html">Examples and platforms</a>: the Robotics Board and standalone platforms, and every example with its expected output.</li>
+  <li><a href="write-your-own.html">Write your own code</a>: templates in plain C and in beitlabduino, mailbox commands and the profile rules.</li>
+</ul>
+
 <h2 id="product">The product</h2>
 <p>The Robotics Board ships as part of Balance Robot v1. Schematics, circuit drawings and the subsystems report are not published. <a href="{{linkedin}}" target="_blank" rel="noopener">Connect on the Beitlab LinkedIn page</a> to ask about the board.</p>
 <figure>

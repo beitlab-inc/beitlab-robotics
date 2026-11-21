@@ -1,0 +1,249 @@
+<!--meta
+title: Write your own code: plain C and beitlabduino · Robotics Board · Beitlab Robotics
+description: Create your own C906 program for the Robotics Board or a standalone Milk-V Duo S, in plain C with FreeRTOS or in the Arduino-style beitlabduino library. Project layout, templates, profiles, mailbox commands and a build checklist.
+layout: docs
+section: board
+-->
+<p class="kicker"><span class="eyebrow">Robotics Board · Development SDK</span></p>
+<h1>Write your own code: plain C and beitlabduino</h1>
+<p class="lead">Your program runs on the Duo S's C906 core under FreeRTOS. You can write it in two styles that build, upload and run the same way: <strong>plain C</strong> with FreeRTOS tasks, or <strong>beitlabduino</strong>, a thin <code>setup()</code>/<code>loop()</code> layer on top of the same runtime. Both work on the Robotics Board and on a standalone Milk-V Duo S. Only the hardware profile changes.</p>
+<div class="meta-row"><span class="badge">C11, riscv64 lp64d</span><span class="badge">FreeRTOS, 5 ms tick</span><span class="badge">PlatformIO</span><span class="badge ok">Same code path on both platforms</span></div>
+<p>Before you start, <a href="sdk.html">flash the board and run <code>hello</code></a> once, so you know the build and upload loop works.</p>
+
+<h2 id="choose">Choose a style</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th></th><th>Plain C</th><th>beitlabduino</th></tr></thead>
+  <tbody>
+    <tr><td>Entry point</td><td><code>void playground_app_init(void)</code>: create your tasks, do not block</td><td><code>void setup(void)</code> once, then <code>void loop(void)</code> forever</td></tr>
+    <tr><td>Scheduling</td><td>Your own FreeRTOS tasks, queues and priorities</td><td>One FreeRTOS task runs <code>setup()</code> then <code>loop()</code></td></tr>
+    <tr><td>GPIO</td><td><code>pg_gpio_output()</code>, <code>pg_gpio_write()</code></td><td><code>bl_pin_mode()</code>, <code>bl_write()</code></td></tr>
+    <tr><td>Printing</td><td><code>pg_print()</code></td><td><code>bl_print()</code> (the same function)</td></tr>
+    <tr><td>Mailbox from Linux</td><td><code>pg_cmd_subscribe()</code>, <code>pg_cmd_reply()</code></td><td><code>bl_cmd_listen()</code>, <code>bl_cmd_receive()</code>, <code>bl_cmd_reply()</code></td></tr>
+    <tr><td>platformio.ini</td><td>Nothing extra</td><td><code>custom_libs = beitlabduino</code></td></tr>
+    <tr><td>Best for</td><td>Several concurrent activities, control loops, using drivers directly</td><td>Quick experiments, one main loop, teaching</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="project">1. Create a project</h2>
+<p>A project is a folder next to the examples. It must live inside <code>examples/platformio/</code> because its <code>platformio.ini</code> loads the shared platform from <code>../common</code>.</p>
+<ol class="steps">
+  <li><strong>Copy a starting point</strong>
+<pre><code><span class="p">$ </span>cd duo-s-playground/examples/platformio
+<span class="p">$ </span>cp -r hello my_app                        <span class="c"># plain C; use beitlabduino_blink for the setup()/loop() style</span></code></pre></li>
+  <li><strong>Edit <code>my_app/platformio.ini</code></strong>The environment name becomes the program name, and the profile decides the pins. Use one of these:
+<pre><code><span class="c"># Standalone Milk-V Duo S, plain C</span>
+[platformio]
+extra_configs = ../common/playground.ini
+default_envs = my_app
+
+[env:my_app]
+extends = playground
+custom_profile = duos_bare
+
+<span class="c"># Standalone Milk-V Duo S, beitlabduino</span>
+[env:my_app]
+extends = playground
+custom_profile = duos_bare
+custom_libs = beitlabduino
+
+<span class="c"># Robotics Board, plain C or beitlabduino (add custom_libs for the latter)</span>
+[env:my_app]
+extends = playground
+custom_profile = beitlab_robotics_rev011
+custom_libs = beitlabduino</code></pre></li>
+  <li><strong>Write <code>my_app/src/main.c</code></strong>Every <code>.c</code> and <code>.S</code> file under <code>src/</code> is compiled, in subfolders too. Use the templates below.</li>
+  <li><strong>Build, upload, watch</strong>
+<pre><code><span class="p">$ </span>cd my_app
+<span class="p">$ </span>pio run                       <span class="c"># compile only</span>
+<span class="p">$ </span>pio run -t upload            <span class="c"># upload over SSH and restart the C906</span>
+<span class="p">$ </span>pio run -t rtmonitor         <span class="c"># C906 log; Ctrl-C leaves the program running</span></code></pre>
+Set <code>PIO_DUO_HOST</code> if your board is not <code>beitlab-milkv-duo.local</code>. On the Robotics Board, unlock first with the E-stop open (<a href="sdk.html#carrier">carrier note</a>).</li>
+</ol>
+
+<div class="callout danger"><span class="title">Profile and platform must match</span>
+  <p><code>duos_bare</code> is for a Duo S with <strong>nothing attached to the carrier</strong>. Never upload a program built with it to a Duo S fitted on the Robotics Board: it can grant access to pads that drive the motor enable and other robot connections. For the carrier, keep <code>beitlab_robotics_rev011</code>, which refuses everything the robot owns and allows only the on-board LED (A29). A profile that is empty or unknown fails the build.</p>
+</div>
+
+<h2 id="plain-c">2. Plain C template</h2>
+<p>A program is a set of FreeRTOS tasks created from <code>playground_app_init()</code>. The runtime calls that function once before the scheduler starts, so create tasks and queues there and return quickly.</p>
+<pre><code>/* my_app: blink the on-board LED and print a counter, in plain C. */
+#include &lt;stdint.h&gt;              /* first: the SDK FreeRTOS.h does not include it */
+#include "FreeRTOS.h"
+#include "task.h"
+#include "playground.h"          /* pg_print, pg_cmd_subscribe, pg_cmd_reply */
+#include "pg_gpio.h"             /* pg_gpio_output, pg_gpio_write */
+
+#define LED "A29"                /* Duo S on-board LED, allowed by both profiles */
+
+static void blink_task(void *arg)
+{
+	int level = 0, count = 0;
+
+	(void)arg;
+	if (pg_gpio_output(LED)) {   /* -1: the profile refused the pad; it says why */
+		vTaskDelete(NULL);
+		return;
+	}
+	pg_print("my_app profile %s", pg_profile_name());
+	for (;;) {
+		level = !level;
+		(void)pg_gpio_write(LED, level);
+		if (level)
+			pg_print("blink %d", ++count);
+		vTaskDelay(pdMS_TO_TICKS(500));
+	}
+}
+
+void playground_app_init(void)
+{
+	xTaskCreate(blink_task, "blink", configMINIMAL_STACK_SIZE, NULL,
+		    tskIDLE_PRIORITY + 1, NULL);
+}</code></pre>
+<p>Rules for plain C:</p>
+<ul>
+  <li><strong>Include <code>&lt;stdint.h&gt;</code> before <code>FreeRTOS.h</code>.</strong> The vendor header does not include it.</li>
+  <li><strong>Always block.</strong> A task must call <code>vTaskDelay()</code>, wait on a queue or semaphore, or delete itself. A task that never waits starves the idle task.</li>
+  <li><strong>Print from tasks only.</strong> <code>pg_print()</code> is safe in tasks and not in interrupt handlers. It adds a newline, cuts lines at 160 characters, and writes to the serial console with an <code>RT:</code> prefix and to the log that <code>rtmonitor</code> reads.</li>
+  <li><strong>Check before you touch hardware.</strong> <code>pg_gpio_output()</code> and <code>pg_gpio_write()</code> return 0 or -1 and check the profile first. To ask without side effects use <code>pg_profile_gpio_output(pad, NULL)</code> (returns <code>NULL</code> when allowed, otherwise the reason), <code>pg_profile_resource(name)</code> for peripherals and <code>pg_profile_i2c_address(bus, address)</code> for I²C devices.</li>
+  <li><strong>Pad names</strong> are a port letter and a bit number, for example <code>"A29"</code>. <code>"B019"</code> means the same pad as <code>"B19"</code>. Only ports A to D are supported, and the pad must already be muxed to GPIO: the API never changes pinmux.</li>
+</ul>
+
+<h3 id="plain-mailbox">Receiving commands from Linux in plain C</h3>
+<p>Linux on the A53 can send the C906 an 8-byte mailbox message: a command id and a 32-bit value. Subscribe to an id, wait on the returned queue and reply once to each message. Ids <code>0x00</code> to <code>0x4f</code> are yours, except <code>0x40</code> which the runtime keeps for ping; at most four can be subscribed. An id nobody subscribes to is echoed back unchanged.</p>
+<pre><code>#include &lt;stdint.h&gt;
+#include "FreeRTOS.h"
+#include "task.h"
+#include "playground.h"
+
+#define CMD_DOUBLE 0x45
+
+static QueueHandle_t cmd_queue;
+
+static void cmd_task(void *arg)
+{
+	cmdqu_t cmd;
+
+	(void)arg;
+	for (;;) {
+		if (xQueueReceive(cmd_queue, &amp;cmd, portMAX_DELAY) != pdTRUE)
+			continue;
+		pg_print("cmd 0x%x value %d", cmd.cmd_id, (int)cmd.param_ptr);
+		pg_cmd_reply(&amp;cmd, cmd.param_ptr * 2);    /* one reply per command, soon */
+	}
+}
+
+void playground_app_init(void)
+{
+	cmd_queue = pg_cmd_subscribe(CMD_DOUBLE);
+	xTaskCreate(cmd_task, "cmd", configMINIMAL_STACK_SIZE, NULL,
+		    tskIDLE_PRIORITY + 2, NULL);
+}</code></pre>
+<p>Send it from the PC with <code>bl_send</code> (installed on the board in image 0.4.1), as in the <a href="examples.html#bl-mailbox">mailbox example</a>: <code>./bl_send.sh 0x45 21</code> prints <code>42</code>.</p>
+
+<h2 id="beitlabduino">3. beitlabduino template</h2>
+<p>With <code>custom_libs = beitlabduino</code>, include <code>beitlabduino.h</code> and define <code>setup()</code> and <code>loop()</code>. <strong>Do not define <code>playground_app_init()</code></strong>: beitlabduino provides it and calls your two functions from one FreeRTOS task.</p>
+<pre><code>/* my_app: the same program, Arduino style. */
+#include "beitlabduino.h"
+
+static int count;
+
+void setup(void)
+{
+	bl_pin_mode(BL_LED, BL_OUTPUT);              /* BL_LED is "A29" */
+	bl_print("my_app profile %s", pg_profile_name());
+}
+
+void loop(void)
+{
+	bl_write(BL_LED, BL_HIGH);
+	bl_delay(500);
+	bl_write(BL_LED, BL_LOW);
+	bl_delay(500);
+	bl_print("blink %d", ++count);
+}</code></pre>
+<div class="table-wrap"><table>
+  <thead><tr><th>Function</th><th>What it does</th></tr></thead>
+  <tbody>
+    <tr><td><code>bl_pin_mode(pad, BL_OUTPUT)</code></td><td>Make a pad an output, driven low. Returns 0, or -1 and prints why if the profile refuses it. Only outputs are supported</td></tr>
+    <tr><td><code>bl_write(pad, BL_HIGH|BL_LOW)</code></td><td>Drive an output. Pads that were not accepted are ignored</td></tr>
+    <tr><td><code>bl_delay(ms)</code></td><td>Wait about <em>ms</em> milliseconds, rounded up to the 5 ms tick</td></tr>
+    <tr><td><code>bl_print(fmt, ...)</code></td><td>Print one line, same as <code>pg_print()</code></td></tr>
+    <tr><td><code>bl_cmd_listen(id)</code></td><td>Deliver a mailbox command id to <code>bl_cmd_receive()</code>. Call from <code>setup()</code></td></tr>
+    <tr><td><code>bl_cmd_receive(&amp;cmd, wait_ms)</code></td><td>Wait up to <em>wait_ms</em> for a command. Returns 1 and fills <code>cmd</code>, or 0 on timeout. Counts as a delay for <code>loop()</code></td></tr>
+    <tr><td><code>bl_cmd_reply(&amp;cmd, value)</code></td><td>Answer a command with a 31-bit value, exactly once and soon, because Linux waits 1 s by default</td></tr>
+  </tbody>
+</table></div>
+<p><code>loop()</code> must wait: call <code>bl_delay()</code> or <code>bl_cmd_receive()</code> with a non-zero time on every pass. A command receiver looks like this:</p>
+<pre><code>#include "beitlabduino.h"
+
+#define CMD_LED 0x41
+
+static int on;
+
+void setup(void)
+{
+	bl_pin_mode(BL_LED, BL_OUTPUT);
+	bl_cmd_listen(CMD_LED);
+}
+
+void loop(void)
+{
+	bl_cmd_t cmd;
+
+	if (bl_cmd_receive(&amp;cmd, 100)) {            /* wakes at once on a command */
+		if (cmd.value &gt; 1) {
+			bl_cmd_reply(&amp;cmd, BL_CMD_ERROR);   /* refuse bad values */
+			return;
+		}
+		on = (int)cmd.value;
+		bl_write(BL_LED, on ? BL_HIGH : BL_LOW);
+		bl_cmd_reply(&amp;cmd, (uint32_t)on);
+	}
+}</code></pre>
+
+<h3 id="bl-modules">Optional beitlabduino modules</h3>
+<p>Sensor drivers are libraries you add to <code>custom_libs</code>. Each also needs its own profile, because the profile grants the bus and the device address.</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>Hardware</th><th><code>custom_libs</code></th><th><code>custom_profile</code></th><th>API</th></tr></thead>
+  <tbody>
+    <tr><td>Robotics Board BMI323 IMU, I²C4 <code>0x68</code></td><td><code>beitlabduino carrier_imu beitlabduino_imu</code></td><td><code>beitlab_robotics_rev011_imu</code></td><td><code>bl_imu_begin()</code>, <code>bl_imu_read()</code></td></tr>
+    <tr><td>Standalone BMI160 on J3 (B20 SCL, B21 SDA)</td><td><code>beitlabduino duos_i2c4 beitlabduino_bmi160</code></td><td><code>duos_bare_bmi160_j3</code></td><td><code>bl_bmi160_begin()</code>, <code>bl_bmi160_read()</code></td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="platform-diff">4. Per-platform checklist</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>Step</th><th>Robotics Board</th><th>Milk-V Duo S standalone</th></tr></thead>
+  <tbody>
+    <tr><td>Profile</td><td><code>beitlab_robotics_rev011</code> (or <code>_imu</code>)</td><td><code>duos_bare</code></td></tr>
+    <tr><td>Pads you can drive</td><td>A29 only</td><td>A29, plus J3 pads A18, A19, A20, A28 (3.3 V logic)</td></tr>
+    <tr><td>Before uploading</td><td>Unlock with the E-stop open, wheels off the ground, battery disconnect in reach</td><td>Check the schematic for your board revision before wiring a pad</td></tr>
+    <tr><td>Peripherals</td><td>SPI3, I²C4, PWM 0–2 are reserved. Only the checked IMU driver may use I²C4</td><td>I²C4 on J3 only with the BMI160 profile. There are no general PWM or SPI APIs yet</td></tr>
+    <tr><td>Wrong upload?</td><td colspan="2"><code>ssh beitlab@&lt;board&gt; sudo -n /usr/libexec/playground/rtos-control recover</code> restarts the starter firmware; Linux stays up</td></tr>
+  </tbody>
+</table></div>
+<p>To enable another pad, add a profile manifest in the repository's <code>profiles/</code> folder. An application pin entry records the owner, function, voltage, connector and purpose, with evidence from the schematic, the SDK mux and Linux ownership. A child profile cannot release a pin that Linux owns, and unknown pins are denied. See <code>docs/PROFILES.md</code> in the repository.</p>
+
+<h2 id="pitfalls">5. Pitfalls</h2>
+<div class="callout warn"><span class="title">Printing</span>
+  <p><code>pg_print()</code> and <code>bl_print()</code> use the vendor formatter, not newlib's. It knows only <code>%d %x %s %c %p</code> and the <code>l</code> modifier. <code>%x</code> and <code>%p</code> always print every digit and widths are ignored. <strong><code>%u</code>, <code>%i</code> and <code>%f</code> are not supported</strong>, and an unsupported letter does not end the conversion, so <code>"period %u ms"</code> reads its argument as a string pointer and crashes the C906. Use <code>%d</code> for values below 2<sup>31</sup> or <code>%x</code>, and cast to <code>int</code>.</p>
+</div>
+<ul>
+  <li><strong>The tick is 5 ms.</strong> <code>vTaskDelay(pdMS_TO_TICKS(1))</code> and <code>bl_delay(1)</code> wait for the next tick and can be up to 5 ms short. Fast loops, like 10 kHz motor control, belong in an interrupt or a driver, not in task delays.</li>
+  <li><strong>Memory.</strong> The program is an ELF64 for the C906 region <code>0x9fe00000</code> to <code>0xa0000000</code> (2 MiB). The builder checks this and an upload of an invalid ELF exits with code 2.</li>
+  <li><strong>Shared GPIO registers.</strong> The A53 and the C906 share GPIO port registers, and FreeRTOS critical sections cannot synchronise with Linux. The driver preserves unrelated bits, but a cross-core race remains: verify timing-sensitive pin work on hardware.</li>
+  <li><strong>Do not bypass the checked API.</strong> Direct SDK or memory-mapped register access skips the profile checks. Keep it out of programs you share.</li>
+  <li><strong>One program at a time.</strong> An upload or <code>recover</code> replaces whatever the C906 is running. A new upload always stops the previous one.</li>
+</ul>
+
+<h2 id="no-pio">Building without PlatformIO</h2>
+<p>PlatformIO calls <code>firmware/rtosbuild.py</code>, the same builder that compiles the starter firmware inside the image, so your program gets identical flags, start-up code and linker script. You can run it directly, for example in CI:</p>
+<pre><code><span class="p">$ </span>python3 firmware/rtosbuild.py build --profile duos_bare --name my_app \
+    --out /tmp/my_app.elf my_app.c
+<span class="p">$ </span>python3 firmware/rtosbuild.py check /tmp/my_app.elf       <span class="c"># validate the ELF layout</span>
+<span class="p">$ </span>python3 firmware/profiles.py beitlab_robotics_rev011        <span class="c"># inspect a profile</span></code></pre>
+<p>For a beitlabduino program add <code>-I examples/platformio/common -I examples/platformio/common/lib/beitlabduino</code> and list <code>examples/platformio/common/lib/beitlabduino/beitlabduino.c</code> among the sources, which is what the PlatformIO platform does for <code>custom_libs</code>. Upload the resulting ELF with <code>python3 examples/platformio/common/upload.py /tmp/my_app.elf</code>; it uses the same <code>PIO_DUO_HOST</code> settings.</p>
+
+<h2 id="share">Sharing your project</h2>
+<p>The goal of the SDK is to make C906 programs easy to share. A project is a folder with a <code>platformio.ini</code> and a <code>src/</code> directory. To share one, publish that folder together with a note of the profile it requires, and ask people to drop it into <code>examples/platformio/</code> of their own checkout. Framework and example sources carry <code>SPDX-License-Identifier: MIT</code> headers; the vendor SDK parts keep their upstream licenses, listed in <code>THIRD_PARTY_NOTICES</code> in the repository.</p>
+<p>Next: browse the <a href="examples.html">examples</a> for working versions of every pattern on this page.</p>

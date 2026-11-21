@@ -19,6 +19,14 @@
       ]
     },
     {
+      "title": "Development SDK",
+      "items": [
+        {"page": "docs/board/sdk.html", "label": "Get the SDK and flash it"},
+        {"page": "docs/board/examples.html", "label": "Examples and platforms"},
+        {"page": "docs/board/write-your-own.html", "label": "Write your own code"}
+      ]
+    },
+    {
       "title": "Balance Robot v1",
       "items": [
         {"page": "docs/robot/index.html", "label": "Robot overview"}

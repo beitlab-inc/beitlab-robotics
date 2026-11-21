@@ -1,0 +1,202 @@
+<!--meta
+title: Development SDK: get it and flash it · Robotics Board · Beitlab Robotics
+description: Clone the duo-s-playground SDK, get the Beitlab Milk-V Duo OS image, preconfigure Wi-Fi, flash the microSD card, boot the Duo S and upload your first C906 program with PlatformIO.
+layout: docs
+section: board
+-->
+<p class="kicker"><span class="eyebrow">Robotics Board · Development SDK</span></p>
+<h1>Development SDK: get it and flash it</h1>
+<p class="lead">The <a href="https://github.com/beitlab-inc/beitlab-os-milkv-duo-sdk" target="_blank" rel="noopener"><code>duo-s-playground</code></a> repository is the Beitlab framework and SDK for the Milk-V Duo S. It holds a flashable Linux image, a PlatformIO platform for the C906 real-time core, the beitlabduino <code>setup()</code>/<code>loop()</code> library and a set of examples. This page takes you from nothing to a program running on the board, over Wi-Fi.</p>
+<div class="meta-row"><span class="badge">About 40 minutes</span><span class="badge">Milk-V Duo S + microSD</span><span class="badge">Wi-Fi, Ethernet or serial</span><span class="badge ok">Same steps on the Robotics Board and on a bare Duo S</span></div>
+
+<h2 id="what">What you get</h2>
+<p>The SG2000 chip in the Duo S has two processors. The SDK uses both, and you only ever restart the small one.</p>
+<div class="cards">
+  <div class="card"><span class="tag">Cortex-A53</span><h4>Linux image</h4><p>Boots from the microSD card with Wi-Fi, SSH, mDNS (<code>beitlab-milkv-duo.local</code>) and the <code>rtos-agent</code> installed and enabled from the first boot.</p></div>
+  <div class="card"><span class="tag">C906</span><h4>Your program</h4><p>A FreeRTOS program you write in C. PlatformIO builds it on your PC and uploads it over SSH. Linux and your SSH session stay up while it restarts.</p></div>
+  <div class="card"><span class="tag">PC</span><h4>Framework</h4><p>A PlatformIO platform, the beitlabduino library, hardware profiles that protect the carrier's pins, and the examples.</p></div>
+</div>
+<p>The robot control core lives in a separate project. This SDK does not build the balance controller or the motor drivers: it is the open framework for your own code. See <a href="examples.html">Examples and platforms</a> for what runs where, and <a href="write-your-own.html">Write your own code</a> to start a project.</p>
+
+<h2 id="need">What you need</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>Item</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>Milk-V Duo S</td><td>On its own, or fitted on the Robotics Board v0.11. Wi-Fi needs the Duo S variant with the wireless module; Ethernet works on any.</td></tr>
+    <tr><td>microSD card, 1 GB or larger, and a card reader</td><td>The card is erased completely.</td></tr>
+    <tr><td>A development PC</td><td>Linux x86_64 (Ubuntu recommended) or Windows with WSL2. macOS can prepare and flash the card, but the C906 toolchain is an x86_64 Linux build, so use a Linux machine, VM or Docker to build firmware. See the <a href="#hosts">host table</a>.</td></tr>
+    <tr><td>Your Wi-Fi name and password</td><td>WPA/WPA2 Personal, hidden SSIDs included. SSID 1–32 bytes, password 8–63 bytes.</td></tr>
+    <tr><td>An SSH key pair (recommended)</td><td>The image has no default password. If you have none: <code>ssh-keygen -t ed25519</code>.</td></tr>
+    <tr><td>3.3 V USB-to-UART adapter (optional)</td><td>For the J22 serial console, used to watch the boot or to enter Wi-Fi on the board. Never a 5 V adapter.</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="hosts">Development PC support</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>PC</th><th>Flash the card</th><th>Build and upload C906 programs</th></tr></thead>
+  <tbody>
+    <tr><td>Linux x86_64</td><td>Yes: guided imager, <code>configure-image.py</code>, <code>dd</code>, Etcher</td><td>Yes, natively</td></tr>
+    <tr><td>Windows 10/11</td><td>Prepare the image in WSL2, then flash it with balenaEtcher or Raspberry Pi Imager. The guided imager does not write raw disks on native Windows</td><td>Yes, inside WSL2</td></tr>
+    <tr><td>macOS</td><td>Yes: guided imager (<code>brew install mtools</code>), Etcher. Card writing has fixture tests, not yet hardware validation</td><td>Use a Linux VM or Docker for the toolchain</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="get-sdk">1. Get the SDK</h2>
+<ol class="steps">
+  <li><strong>Install the PC tools</strong>On Ubuntu, Debian or WSL2:
+<pre><code><span class="p">$ </span>sudo apt install git python3 python3-pip mtools openssl
+<span class="p">$ </span>pip install platformio</code></pre>
+On macOS use <code>brew install mtools git python3</code>. The imager needs Python 3.9 or newer.</li>
+  <li><strong>Clone the repository</strong>
+<pre><code><span class="p">$ </span>git clone https://github.com/beitlab-inc/beitlab-os-milkv-duo-sdk.git duo-s-playground
+<span class="p">$ </span>cd duo-s-playground
+<span class="p">$ </span>cat VERSION             <span class="c"># the image version this checkout matches, e.g. 0.4.1</span></code></pre>
+Everything below is run from this folder.</li>
+  <li><strong>Download the image</strong>From the repository's <em>Releases</em> page, download <code>beitlab-robotics-milkv-duo-os-&lt;version&gt;-duos-arm64-sd.img</code> (it may be <code>.img.xz</code> or <code>.img.gz</code>) and <code>SHA256SUMS</code> into <code>~/Downloads</code>. Check it:
+<pre><code><span class="p">$ </span>cd ~/Downloads &amp;&amp; sha256sum -c SHA256SUMS --ignore-missing
+<span class="c"># expect: beitlab-robotics-milkv-duo-os-0.4.1-duos-arm64-sd.img: OK</span></code></pre>
+The guided imager can also download and verify the latest published release for you, so you can skip this step if you use it (<a href="#flash-imager">option A</a>).</li>
+</ol>
+
+<h2 id="configure">2. Preconfigure Wi-Fi and write the card</h2>
+<p>The unmodified image holds no network credentials. You add yours to a <em>personal copy</em> before it is written, so the board joins Wi-Fi on its very first boot. Choose one option. A is the easiest.</p>
+<div class="callout warn"><span class="title">The card is erased</span>
+  <p>Every option below overwrites the whole card. Check the device name twice: naming your computer's own disk destroys it. A personal image contains your Wi-Fi key in derived form, so keep it private and never publish it.</p>
+</div>
+
+<h3 id="flash-imager">Option A: the guided beitlab Imager (Linux and macOS)</h3>
+<p>One interactive tool checks the image, asks for the Wi-Fi settings, finds the card, writes it and reads it back to verify.</p>
+<pre><code><span class="p">$ </span>python3 scripts/beitlab-imager.py --image ~/Downloads/beitlab-robotics-milkv-duo-os-0.4.1-duos-arm64-sd.img</code></pre>
+<p>Run it as your normal user: it asks for administrator rights only to write the disk. It goes through four steps:</p>
+<ol class="steps">
+  <li><strong>Image</strong>Verifies the SHA256 against the <code>.sha256</code> file or <code>SHA256SUMS</code> next to the image. Otherwise paste the release checksum or pass <code>--sha256 &lt;digest&gt;</code>.</li>
+  <li><strong>Board settings</strong>Enter the Wi-Fi name and your two-letter country code (for example <code>CO</code>, <code>US</code>, <code>ES</code>), then the password at a hidden prompt. Optionally set a hostname such as <code>robot-01</code>, point to your <code>~/.ssh/id_ed25519.pub</code> public key, and set a unique administration password (12 characters or more). Passwords never appear in shell arguments or logs.</li>
+  <li><strong>Card</strong>Pick the removable drive from the list by number. Insert the card and press <kbd>r</kbd> to refresh. System disks, read-only media and mounted storage are blocked.</li>
+  <li><strong>Flash</strong>Review the summary and type the full phrase shown, for example <code>ERASE /dev/sdc</code>. A partial answer asks again. The writer unmounts the volumes, writes, flushes and verifies the checksum by reading back.</li>
+</ol>
+<p>Useful variations:</p>
+<pre><code><span class="p">$ </span>python3 scripts/beitlab-imager.py --list-drives                     <span class="c"># see removable drives, nothing is written</span>
+<span class="p">$ </span>python3 scripts/beitlab-imager.py --image my.img --dry-run          <span class="c"># everything except writing</span>
+<span class="p">$ </span>python3 scripts/beitlab-imager.py --image my.img --prepare-only --output ~/Downloads/my-duo.img
+<span class="p">$ </span>python3 scripts/beitlab-imager.py --flash-only --image ~/Downloads/my-duo.img   <span class="c"># burn a prepared image</span>
+<span class="p">$ </span>python3 scripts/beitlab-imager.py                                      <span class="c"># no --image: download the latest release</span></code></pre>
+<p>Add <code>--no-emoji</code> or <code>--no-color</code> for plain output. Without <code>--image</code>, the imager downloads the latest published release and verifies it before use; a public release needs no GitHub account.</p>
+
+<h3 id="flash-config">Option B: configure an image, then flash it with any tool</h3>
+<p>This works on Linux, macOS and WSL2 and lets you use the flashing tool you prefer.</p>
+<ol class="steps">
+  <li><strong>Create the personal image</strong>
+<pre><code><span class="p">$ </span>python3 scripts/configure-image.py \
+    --image ~/Downloads/beitlab-robotics-milkv-duo-os-0.4.1-duos-arm64-sd.img \
+    --output ~/Downloads/my-duo.img \
+    --ssid "Your network" --country CO \
+    --hostname robot-01 --ssh-key ~/.ssh/id_ed25519.pub --user-password</code></pre>
+The Wi-Fi password and the administration password are asked at hidden prompts. Use the <strong>public</strong> <code>.pub</code> key and repeat <code>--ssh-key</code> for more keys. The hostname has no <code>.local</code> and uses letters, digits and hyphens. Use <code>--no-wifi</code> instead of <code>--ssid</code>/<code>--country</code> for an Ethernet-only board. <code>--user-password</code> sets the password for <code>sudo</code> and local login; it does not enable password SSH. If the image is compressed, extract it first with <code>xz -dk</code>.</li>
+  <li><strong>Check the output</strong>It writes <code>my-duo.img</code> and <code>my-duo.img.sha256</code> and refuses to overwrite existing files. The original image is left unchanged.</li>
+  <li><strong>Write the card</strong>Use one of:
+    <ul>
+      <li><strong>balenaEtcher:</strong> <em>Flash from file</em>, choose <code>my-duo.img</code>, choose the card, <em>Flash</em>.</li>
+      <li><strong>Raspberry Pi Imager:</strong> <em>Choose OS → Use custom</em>, pick the image, choose the card. Do <strong>not</strong> apply OS customisation.</li>
+      <li><strong>Linux helper:</strong> <code>sudo scripts/flash.sh /dev/sdX ~/Downloads/my-duo.img</code>. It checks the checksum, refuses system disks and asks you to retype the device.</li>
+      <li><strong><code>dd</code> on Linux:</strong>
+<pre><code><span class="p">$ </span>lsblk -o NAME,SIZE,MODEL,TRAN      <span class="c"># card out</span>
+<span class="c"># insert the card</span>
+<span class="p">$ </span>lsblk -o NAME,SIZE,MODEL,TRAN      <span class="c"># card in: the new line is your card, e.g. sdb</span>
+<span class="p">$ </span>sudo dd if=$HOME/Downloads/my-duo.img of=/dev/sdX bs=4M conv=fsync status=progress
+<span class="p">$ </span>sync</code></pre></li>
+    </ul>
+  </li>
+</ol>
+
+<h3 id="flash-after">Option C: write the stock image, then configure the card</h3>
+<p>If the card is already flashed, mount its <code>boot</code> volume and add the settings to it. The board imports them on first boot:</p>
+<pre><code><span class="p">$ </span>python3 scripts/configure-image.py --boot-dir /path/to/boot \
+    --ssid "Your network" --country CO \
+    --hostname robot-01 --ssh-key ~/.ssh/id_ed25519.pub --user-password</code></pre>
+<p>This writes <code>playground/wifi.conf</code>, <code>hostname</code>, <code>authorized_keys</code> and <code>user.conf</code> on the FAT volume and refuses to replace existing ones. Eject the card safely afterwards. On first boot the Wi-Fi profile is stored with root-only permissions, the hostname is applied, the keys are installed for the <code>beitlab</code> user, and the import files are removed. The password is carried only as a salted SHA-512 hash.</p>
+
+<h3 id="flash-serial">Option D: no preconfiguration</h3>
+<ul>
+  <li><strong>Ethernet:</strong> plug in the cable. DHCP needs no setup.</li>
+  <li><strong>Serial wizard:</strong> attach a 3.3 V adapter to J22 at <strong>115200 8N1</strong> before powering on. If neither Ethernet nor Wi-Fi connects within about 15 seconds, the console asks <code>Connect to Wi-Fi now? [y/N]</code>. Answer <kbd>y</kbd> within 30 seconds, then enter the SSID and the hidden password. It tries three times and saves a working profile for later boots. <kbd>q</kbd> or <kbd>Ctrl-C</kbd> cancels. Later, <code>sudo beitlab-wifi-setup</code> reopens it.</li>
+</ul>
+<p>Without a provisioned key or password the <code>beitlab</code> account stays locked, so SSH will not work. Prefer options A to C when you want to log in over the network.</p>
+
+<h2 id="boot">3. Boot the board</h2>
+<ol class="steps">
+  <li><strong>Set the boot switch to ARM</strong>With the board unpowered, move the Duo S boot switch to <strong>ARM</strong>. If the serial log starts with <code>C</code> instead of the ARM boot messages, the switch is on RISC-V: power off, move it and try again.</li>
+  <li><strong>Insert the card</strong>Put the flashed microSD card into the Duo S.</li>
+  <li><strong>Power it</strong>
+    <ul>
+      <li><strong>Bare Duo S:</strong> power it from its USB-C port.</li>
+      <li><strong>Duo S on the Robotics Board:</strong> power the board, as in <a href="../getting-started.html#power-up">First steps</a>. <strong>Do not also plug in USB-C.</strong> Use Ethernet or Wi-Fi for the network.</li>
+    </ul>
+  </li>
+  <li><strong>Wait about 30 seconds</strong>Linux boots, the Wi-Fi driver loads, the saved network connects and the <code>rtos-agent</code> is enabled. Lines starting with <code>RT:</code> on the serial console come from the small core. That is expected.</li>
+</ol>
+
+<h2 id="connect">4. Connect and verify</h2>
+<pre><code><span class="p">$ </span>ping beitlab-milkv-duo.local            <span class="c"># or robot-01.local if you set a hostname</span>
+<span class="p">$ </span>ssh beitlab@beitlab-milkv-duo.local        <span class="c"># uses your provisioned key</span>
+<span class="p">$ </span>sudo -n /usr/libexec/playground/rtos-control status</code></pre>
+<p>The status should read:</p>
+<pre><code>state=running
+firmware=/lib/firmware/playground.elf
+lock=unlocked
+release=0.4.1</code></pre>
+<ol class="steps">
+  <li><strong>Trust the host key once</strong>Connect by SSH once and accept the board's fingerprint, ideally after comparing it with <code>ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub</code> on the serial console. PlatformIO rejects unknown or changed host keys.</li>
+  <li><strong>Hostnames</strong>If you set a hostname, use it here and run <code>export PIO_DUO_HOST=robot-01.local</code> so PlatformIO talks to the same board.</li>
+  <li><strong>If <code>.local</code> does not resolve</strong>Look up the board's IP address on your router and use <code>ssh beitlab@&lt;ip&gt;</code> with <code>PIO_DUO_HOST=&lt;ip&gt;</code>. After re-flashing a card, run <code>ssh-keygen -R beitlab-milkv-duo.local</code> once, because the host key changes.</li>
+  <li><strong>Check Wi-Fi explicitly</strong>
+<pre><code><span class="p">$ </span>systemctl is-active beitlab-wifi.service beitlab-wpa.service dhcpcd.service
+<span class="p">$ </span>sudo wpa_cli -i wlan0 status           <span class="c"># wpa_state=COMPLETED</span>
+<span class="p">$ </span>ip -4 addr show dev wlan0
+<span class="p">$ </span>journalctl -b -u beitlab-wifi-import -u beitlab-wifi -u beitlab-wpa</code></pre></li>
+</ol>
+<div class="callout"><span class="title">Accounts</span>
+  <p>The login is <code>beitlab</code> with a private home, authenticated by your SSH key. Root cannot log in over SSH and there is no shared or default password. Administration uses <code>sudo</code> with the password you chose before flashing. Add <code>--ssh-password-login</code> to <code>configure-image.py</code> only if you deliberately want password SSH.</p>
+</div>
+
+<h2 id="upload">5. Build and upload your first program</h2>
+<p>On the PC, once:</p>
+<pre><code><span class="p">$ </span>scripts/fetch-freertos.sh            <span class="c"># FreeRTOS tree and the C906 toolchain at the pinned commit; builds the vendor libraries</span></code></pre>
+<p>Then upload the <code>hello</code> example:</p>
+<pre><code><span class="p">$ </span>cd examples/platformio/hello
+<span class="p">$ </span>pio run -t upload                    <span class="c"># build, copy over SSH, restart the C906</span>
+<span class="p">$ </span>pio run -t rtmonitor                 <span class="c"># C906 log over SSH, Ctrl-C to stop</span></code></pre>
+<p>The upload ends with <code>loaded /lib/firmware/playground.elf sha256=... state=running</code>. The monitor prints a line every second:</p>
+<pre><code>RTD: playground hello Nov 19 2026 16:42:07</code></pre>
+<p>Linux keeps running: your SSH sessions stay open and <code>uptime</code> does not reset. To target another board once, use <code>PIO_DUO_HOST=192.168.1.50 pio run -t upload</code>. <code>PIO_DUO_USER</code> and <code>PIO_DUO_PASS</code> are also available; a key is preferred over a password.</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>Upload exit code</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td><code>0</code></td><td>Loaded and running.</td></tr>
+    <tr><td><code>2</code></td><td>Not a valid C906 ELF. Nothing changed.</td></tr>
+    <tr><td><code>3</code></td><td>The board is locked (see <a href="#carrier">the carrier note</a>).</td></tr>
+    <tr><td><code>4</code></td><td>The program did not start. The starter firmware is running instead.</td></tr>
+  </tbody>
+</table></div>
+<div class="callout ok"><span class="title">Checkpoint</span><p>You see the <code>hello</code> banner in <code>rtmonitor</code>. You now have the full loop: edit C on the PC, <code>pio run -t upload</code>, read the log. Next: <a href="examples.html">try the examples</a> or <a href="write-your-own.html">write your own</a>.</p></div>
+
+<h2 id="carrier">6. On the Robotics Board: lock before the robot moves</h2>
+<p>On the carrier, the C906 owns the motor, PWM, SPI and I²C pins once robot firmware runs, and every upload or <code>recover</code> restarts it. Lock the board before the wheels can move:</p>
+<pre><code><span class="p">$ </span>ssh beitlab@beitlab-milkv-duo.local sudo -n /usr/libexec/playground/rtos-control lock
+<span class="c"># only with the E-stop open:</span>
+<span class="p">$ </span>ssh beitlab@beitlab-milkv-duo.local sudo -n /usr/libexec/playground/rtos-control unlock</code></pre>
+<p>While locked, uploads fail with <code>locked</code> and PlatformIO shows <code>*** [upload] Error 3</code>. The agent cannot see the E-stop, because those pins belong to the C906. Keep the E-stop open, the wheels off the ground and a battery disconnect within reach while you try new code.</p>
+
+<h2 id="recovery">Recovery and troubleshooting</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>Symptom</th><th>What to do</th></tr></thead>
+  <tbody>
+    <tr><td>A program wedged the C906</td><td><code>ssh beitlab@beitlab-milkv-duo.local sudo -n /usr/libexec/playground/rtos-control recover</code> restarts the starter firmware. Linux stays up.</td></tr>
+    <tr><td>No ping, nothing on serial</td><td>Write the card again. Check the boot switch is on ARM.</td></tr>
+    <tr><td>Serial log starts with <code>C</code></td><td>The boot switch is on RISC-V. Power off, set ARM, power on.</td></tr>
+    <tr><td>Board not on Wi-Fi</td><td>Plug in Ethernet or open the J22 console and run <code>sudo beitlab-wifi-setup</code>. Check the country code, the password length (8–63 bytes) and the journal command in step 4.</td></tr>
+    <tr><td><code>Permission denied (publickey)</code></td><td>The image was not given your public key. Re-flash with <code>--ssh-key</code>, or add the key to the card as in <a href="#flash-after">option C</a>.</td></tr>
+    <tr><td>PlatformIO host-key error</td><td>Connect by SSH once to trust the key. After a re-flash, run <code>ssh-keygen -R &lt;host&gt;</code> and connect again.</td></tr>
+    <tr><td><code>pio</code> cannot find the toolchain</td><td>Run <code>scripts/fetch-freertos.sh</code> on a Linux x86_64 machine or in WSL2.</td></tr>
+  </tbody>
+</table></div>
+<p>Source and the full flashing notes are in the <a href="https://github.com/beitlab-inc/beitlab-os-milkv-duo-sdk" target="_blank" rel="noopener"><code>duo-s-playground</code> repository</a> (<code>docs/FLASH.md</code>).</p>

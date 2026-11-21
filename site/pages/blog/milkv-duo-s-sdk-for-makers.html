@@ -1,0 +1,99 @@
+<!--meta
+title: A Milk-V Duo S that makers can actually program
+description: The Beitlab SDK turns the Milk-V Duo S into an easy board for makers. Flash a microSD card with Wi-Fi already set up, then write real-time C or Arduino-style code and upload it over the network.
+layout: blog
+section: blog
+og_type: article
+published: 2026-11-21
+image: assets/img/hero-robot.jpg
+image_alt: Balance Robot v1, the wheeled biped that runs on a Milk-V Duo S and the Beitlab Robotics Board.
+-->
+<p class="kicker"><span class="eyebrow">Makers</span></p>
+<h1>A Milk-V Duo S that makers can actually program</h1>
+<p class="byline"><time datetime="2026-11-21">21 November 2026</time><span>Beitlab Robotics</span></p>
+<p class="lead">The Milk-V Duo S is a tiny board with two processors, Wi-Fi and a lot of promise. Getting it to do something useful in real time used to take an afternoon of SDK builds. We wrote a framework to make it take about forty minutes, and we are sharing it.</p>
+
+<div class="share-row">
+  <a class="btn primary" href="https://www.linkedin.com/sharing/share-offsite/?url={{share_url}}" target="_blank" rel="noopener">Share this article on LinkedIn</a>
+  <a class="btn" href="{{root}}docs/board/sdk.html">Open the step-by-step guide</a>
+</div>
+
+<h2 id="why">Why we built it</h2>
+<p>Our Balance Robot runs on a Duo S. The chip inside it, the SG2000, has a Linux core (a Cortex-A53) and a small real-time core (a C906). That is a great pairing for robots: Linux handles the network and the big software, and the small core does the timing-critical work without Linux getting in the way.</p>
+<p>The catch is getting to that small core. The stock route means building the vendor SDK, learning its FreeRTOS tree, and reflashing the whole card every time you change a line of code. That is a lot to ask of someone who just wants to blink an LED or read a sensor.</p>
+<p>So we built the missing piece, and we are calling it <code>duo-s-playground</code>.</p>
+
+<h2 id="what">What you get</h2>
+<p>Four things, and you do not need to build any of them yourself:</p>
+<ul>
+  <li><strong>A ready-to-flash Linux image.</strong> It boots with Wi-Fi, SSH and a friendly network name, <code>beitlab-milkv-duo.local</code>.</li>
+  <li><strong>A PlatformIO platform for the small core.</strong> You type <code>pio run -t upload</code>. Your program is built on your PC, sent over the network, and started on the C906.</li>
+  <li><strong>beitlabduino.</strong> If you have ever used Arduino, you already know it: write <code>setup()</code> and <code>loop()</code> in plain C.</li>
+  <li><strong>Examples and safety profiles.</strong> Working programs for blinking, mailbox commands and IMUs, plus profiles that stop your code from touching pins it should not.</li>
+</ul>
+
+<h2 id="fast">Your first program in three steps</h2>
+<p>The whole path is written down in the <a href="{{root}}docs/board/sdk.html">SDK guide</a>. Here is the short version.</p>
+<ol>
+  <li><strong>Write the card with your Wi-Fi already inside.</strong> The imager asks for your network name and password, finds your microSD card, writes it and checks the result. There is no serial cable and no typing on the board.</li>
+  <li><strong>Power it up.</strong> Set the boot switch to ARM, insert the card and power the board. About thirty seconds later it is on your network.</li>
+  <li><strong>Upload some code.</strong> Clone the repository, run its setup script once, pick an example and upload it.</li>
+</ol>
+<pre><code>git clone https://github.com/beitlab-inc/beitlab-os-milkv-duo-sdk.git duo-s-playground
+cd duo-s-playground
+python3 scripts/beitlab-imager.py --image ~/Downloads/beitlab-robotics-milkv-duo-os-0.4.1-duos-arm64-sd.img
+
+scripts/fetch-freertos.sh
+cd examples/platformio/hello
+pio run -t upload
+pio run -t rtmonitor</code></pre>
+<p>The last command shows a line from the board once a second. That line is your program, running on the small core, while Linux stays up and your SSH session stays open.</p>
+
+<h2 id="code">Write code the way you like</h2>
+<p>You can write in two styles. They build and upload the same way, so you can start with one and move to the other.</p>
+<h3 id="arduino">Arduino style</h3>
+<p>This is a complete blink program for the on-board LED:</p>
+<pre><code>#include "beitlabduino.h"
+
+void setup(void)
+{
+	bl_pin_mode(BL_LED, BL_OUTPUT);
+}
+
+void loop(void)
+{
+	bl_write(BL_LED, BL_HIGH);
+	bl_delay(500);
+	bl_write(BL_LED, BL_LOW);
+	bl_delay(500);
+}</code></pre>
+<h3 id="plain-c">Plain C with FreeRTOS</h3>
+<p>If you want several tasks, queues or your own timing, skip the layer and write FreeRTOS tasks directly. You create them in one function and the runtime does the rest:</p>
+<pre><code>void playground_app_init(void)
+{
+	xTaskCreate(blink_task, "blink", configMINIMAL_STACK_SIZE, NULL,
+		    tskIDLE_PRIORITY + 1, NULL);
+}</code></pre>
+<p>Both styles can also receive small commands from Linux through a mailbox. That lets a Python script or a ROS 2 node on the board tell the real-time core what to do, which is exactly how our robot is wired. The <a href="{{root}}docs/board/write-your-own.html">write-your-own guide</a> has templates for both.</p>
+
+<h2 id="safe">Made for the board, safe for the robot</h2>
+<p>A real-time core with direct access to pins is powerful, and it is also easy to misuse. A wrong pin on a motor board is not a typo, it is a spinning wheel.</p>
+<p>That is why every project picks a <em>hardware profile</em>. The profile for the Robotics Board allows only the on-board LED and refuses everything the robot owns. The profile for a bare Duo S allows the header pins that are verified for that board. If your code asks for a pin the profile does not allow, it is refused and tells you why, instead of quietly doing something you did not mean.</p>
+<p>It works the same way on both platforms:</p>
+<ul>
+  <li><strong>The Robotics Board.</strong> The Duo S sits on our carrier with motor drivers, an IMU and a latched E-stop.</li>
+  <li><strong>A standalone Duo S.</strong> Just the board, a USB-C cable and whatever you wire to its header.</li>
+</ul>
+<p>The <a href="{{root}}docs/board/examples.html">examples page</a> compares the two and lists every example with what you should see.</p>
+
+<h2 id="honest">Where it stands</h2>
+<p>We would rather be clear than impressive, so here is the honest state of things. The image, the tools and the examples build and pass their checks. The Wi-Fi setup is automated and tested on real card images, and a fresh-card run on hardware is still on our list. The IMU example builds, but its physical readings are still waiting for hardware qualification. Flashing from macOS is supported, but it has not been validated on a physical card yet, and the C906 toolchain needs Linux, or WSL2 on Windows.</p>
+<p>If you try it and something does not match these pages, we want to know.</p>
+
+<h2 id="next">Try it, and tell us what you build</h2>
+<p>Start with the <a href="{{root}}docs/board/sdk.html">step-by-step SDK guide</a>, then run the <a href="{{root}}docs/board/examples.html">examples</a> and make something of your own with the <a href="{{root}}docs/board/write-your-own.html">write-your-own guide</a>. The framework lives in the <a href="https://github.com/beitlab-inc/beitlab-os-milkv-duo-sdk" target="_blank" rel="noopener"><code>duo-s-playground</code> repository</a>.</p>
+<p>We are building this so more people can use the Duo S for real-time work without a week of setup. If you are a maker, a teacher or a student with a project in mind, <a href="{{linkedin}}" target="_blank" rel="noopener">connect with us on LinkedIn</a> and tell us what you are building.</p>
+<div class="share-row">
+  <a class="btn primary" href="https://www.linkedin.com/sharing/share-offsite/?url={{share_url}}" target="_blank" rel="noopener">Share this article on LinkedIn</a>
+  <a class="btn" href="{{linkedin}}" target="_blank" rel="noopener">Connect with Beitlab</a>
+</div>

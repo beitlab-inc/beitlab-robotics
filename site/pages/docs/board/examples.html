@@ -1,0 +1,160 @@
+<!--meta
+title: Examples and platforms · Robotics Board · Beitlab Robotics
+description: The two platforms the Beitlab SDK targets, the Robotics Board and a standalone Milk-V Duo S, and every example in duo-s-playground: what it does, which profile it uses, how to run it and what you should see.
+layout: docs
+section: board
+-->
+<p class="kicker"><span class="eyebrow">Robotics Board · Development SDK</span></p>
+<h1>Examples and platforms</h1>
+<p class="lead">One SDK, two hardware platforms. The same PlatformIO workflow builds a C906 program for the Robotics Board or for a Milk-V Duo S on its own. A <em>hardware profile</em> chosen in each example decides which pins your code may touch. Every example below lives in <code>examples/platformio/</code> of the <a href="https://github.com/beitlab-inc/beitlab-os-milkv-duo-sdk" target="_blank" rel="noopener"><code>duo-s-playground</code></a> repository.</p>
+<div class="meta-row"><span class="badge">Needs a flashed board: <a href="sdk.html">get it and flash it</a></span><span class="badge">pio run -t upload</span><span class="badge">pio run -t rtmonitor</span></div>
+
+<h2 id="platforms">The two platforms</h2>
+<div class="cards">
+  <div class="card"><span class="tag">Platform 1</span><h4>Robotics Board v0.11</h4><p>The Duo S fitted on the Beitlab carrier: motor drivers, IMU, angle sensors, servos and a latched E-stop. The C906 owns the real-time pins. Profile <code>beitlab_robotics_rev011</code>.</p></div>
+  <div class="card"><span class="tag">Platform 2</span><h4>Milk-V Duo S standalone</h4><p>The Duo S on its own, powered over USB-C, with the 3.3 V J3 header free for your own wiring. Profile <code>duos_bare</code>.</p></div>
+</div>
+<div class="table-wrap"><table>
+  <thead><tr><th></th><th>Robotics Board</th><th>Milk-V Duo S standalone</th></tr></thead>
+  <tbody>
+    <tr><td>Power</td><td>The board (12–16.8 V, bench supply first). <strong>Never also USB-C.</strong></td><td>USB-C</td></tr>
+    <tr><td>Network</td><td>Preconfigured Wi-Fi, or the RJ45 in the board's notch</td><td>Preconfigured Wi-Fi or Ethernet</td></tr>
+    <tr><td>Console</td><td>J22, 115200 8N1, 3.3 V</td><td>UART0 of the Duo S (3.3 V), same 115200 8N1 settings</td></tr>
+    <tr><td>Profile</td><td><code>custom_profile = beitlab_robotics_rev011</code></td><td><code>custom_profile = duos_bare</code></td></tr>
+    <tr><td>GPIO your code can drive</td><td>A29, the on-board blue LED. All 24 carrier pads, SPI3, I²C4 and PWM 0–2 are reserved</td><td>The on-board LED A29 and the four verified 3.3 V J3 outputs A18, A19, A20 and A28</td></tr>
+    <tr><td>Sensors</td><td>BMI323 IMU on I²C4 (<code>0x68</code>) through a checked grant</td><td>BMI160 on J3: B20 = SCL, B21 = SDA</td></tr>
+    <tr><td>Safety</td><td>Lock the board, keep the E-stop open and wheels off the ground while testing. See <a href="sdk.html#carrier">the carrier note</a></td><td>No motors attached. Check the schematic for your board revision before wiring a header pad</td></tr>
+    <tr><td>Linux, SSH, upload</td><td colspan="2">Identical: <code>ssh beitlab@beitlab-milkv-duo.local</code>, <code>pio run -t upload</code>, <code>pio run -t rtmonitor</code></td></tr>
+  </tbody>
+</table></div>
+<div class="callout danger"><span class="title">Pick the right profile</span>
+  <p>The profile is chosen at build time. The first version of the SDK does not detect the carrier. Building with <code>duos_bare</code> while the Duo S sits on the Robotics Board can grant access to robot connections, so a program built for the bare board must never be uploaded to the carrier. When unsure, use the carrier profile: it refuses everything the robot owns. Direct SDK or MMIO calls bypass the checked API, so keep your code on the <code>pg_gpio</code> and beitlabduino functions.</p>
+</div>
+
+<h2 id="run">Run any example</h2>
+<p>With the board flashed, connected and unlocked, and the toolchain installed with <code>scripts/fetch-freertos.sh</code> (see <a href="sdk.html#upload">the SDK page</a>):</p>
+<pre><code><span class="p">$ </span>cd duo-s-playground/examples/platformio/&lt;example&gt;
+<span class="p">$ </span>pio run -t upload       <span class="c"># compile, upload over SSH, restart the C906; exits 0 on success</span>
+<span class="p">$ </span>pio run -t rtmonitor    <span class="c"># stream the C906 log; Ctrl-C leaves the program running</span></code></pre>
+<p>Each example selects its own profile in its <code>platformio.ini</code>. The shared settings in <code>examples/platformio/common/playground.ini</code> default to the carrier profile for projects that omit one. Uploading replaces whatever program is running on the C906.</p>
+
+<h2 id="catalog">Example catalog</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>Example</th><th>Platform</th><th>Style</th><th>What it shows</th></tr></thead>
+  <tbody>
+    <tr><td><a href="#hello"><code>hello</code></a></td><td>Standalone</td><td>Plain C</td><td>One FreeRTOS task printing a banner. No GPIO</td></tr>
+    <tr><td><a href="#blink"><code>blink</code></a></td><td>Standalone</td><td>Plain C</td><td>1 Hz GPIO heartbeat, pad chosen in <code>pin.h</code>. <code>heartbeat</code> is the same program, disabled until you enable a pad</td></tr>
+    <tr><td><a href="#mailbox-ping"><code>mailbox_ping</code></a></td><td>Standalone</td><td>Plain C</td><td>Linux to C906 mailbox ping</td></tr>
+    <tr><td><a href="#bl-blink"><code>beitlabduino_blink</code></a></td><td>Standalone</td><td>beitlabduino</td><td>On-board LED with <code>setup()</code>/<code>loop()</code></td></tr>
+    <tr><td><a href="#bl-mailbox"><code>beitlabduino_mailbox</code></a></td><td>Standalone</td><td>beitlabduino</td><td>Control the LED from Linux over the mailbox</td></tr>
+    <tr><td><a href="#bmi160"><code>beitlabduino_bmi160_j3</code></a></td><td>Standalone</td><td>beitlabduino</td><td>BMI160 IMU on the J3 header</td></tr>
+    <tr><td><a href="#robotics-board"><code>robotics_board</code></a></td><td>Robotics Board</td><td>beitlabduino</td><td>Show carrier reservations, blink the on-board LED</td></tr>
+    <tr><td><a href="#robotics-imu"><code>robotics_imu</code></a></td><td>Robotics Board</td><td>Plain C</td><td>Poll the carrier BMI323 over I²C4</td></tr>
+    <tr><td><a href="#bl-imu"><code>beitlabduino_imu</code></a></td><td>Robotics Board</td><td>beitlabduino</td><td>The same IMU through typed samples</td></tr>
+  </tbody>
+</table></div>
+<p>Start with <code>hello</code>. Then move to the beitlabduino examples if you prefer an Arduino-style program, or to the plain C ones if you want FreeRTOS tasks and queues.</p>
+
+<h2 id="standalone">Standalone Milk-V Duo S</h2>
+<p>These use <code>custom_profile = duos_bare</code>. Do not upload them to a Duo S that is fitted on the Robotics Board.</p>
+
+<h3 id="hello"><code>hello</code></h3>
+<p>A FreeRTOS task prints <code>playground hello &lt;build-id&gt;</code> once a second. The build id is the compile date and time, so you can tell which build is running. It touches no GPIO and is the safest first upload.</p>
+<pre><code><span class="p">$ </span>cd examples/platformio/hello &amp;&amp; pio run -t upload &amp;&amp; pio run -t rtmonitor
+RTD: playground hello Nov 19 2026 16:42:07</code></pre>
+<p>On the serial console the same line has an <code>RT:</code> prefix. Linux keeps running; only the small core restarts.</p>
+
+<h3 id="blink"><code>blink</code></h3>
+<p>Toggles one GPIO at 1 Hz, 500 ms each way. The pad comes from <code>pin.h</code>, and the shipped file uses the on-board LED:</p>
+<pre><code>#define PLAYGROUND_GPIO_ENABLE 1
+#define PLAYGROUND_GPIO_PAD "A29"</code></pre>
+<p>With <code>PLAYGROUND_GPIO_ENABLE 0</code> it prints <code>heartbeat idle</code> and touches nothing; that is how the sibling <code>heartbeat</code> example ships, with an empty pad. Edit <code>pin.h</code> for another pad only after checking the schematic: ports A to D are supported, the pad must already be muxed to GPIO, and the profile must allow it. A refused pad prints the profile and the reason.</p>
+
+<h3 id="mailbox-ping"><code>mailbox_ping</code></h3>
+<p>The C906 waits for mailbox command <code>0x40</code> and replies with the nonce plus one. It proves that Linux and the small core can talk.</p>
+<pre><code><span class="p">$ </span>cd examples/platformio/mailbox_ping &amp;&amp; pio run -t upload
+<span class="p">$ </span>./host_ping.sh 7                        <span class="c"># from the PC; on the board: host_ping 7</span>
+host_ping: reply 8 == 7 + 1, ok</code></pre>
+<p>The monitor shows <code>mailbox_ping nonce=7 reply=8</code>. Exit code 3 means the reply came back unchanged, which happens when a program that does not answer ping, such as <code>hello</code>, is running.</p>
+
+<h3 id="bl-blink"><code>beitlabduino_blink</code></h3>
+<p>The same LED blink as an Arduino-style program: <code>setup()</code> once, <code>loop()</code> forever.</p>
+<pre><code>#include "beitlabduino.h"
+
+void setup(void)
+{
+	bl_pin_mode(BL_LED, BL_OUTPUT);
+	bl_print("beitlabduino blink on %s", BL_LED);
+}
+
+void loop(void)
+{
+	bl_write(BL_LED, BL_HIGH);
+	bl_delay(500);
+	bl_write(BL_LED, BL_LOW);
+	bl_delay(500);
+}</code></pre>
+<p>Its <code>platformio.ini</code> adds one line, <code>custom_libs = beitlabduino</code>. Expect <code>beitlabduino blink on A29</code> in the monitor and a 1 Hz LED. The LED keeps blinking after you close the monitor.</p>
+
+<h3 id="bl-mailbox"><code>beitlabduino_mailbox</code></h3>
+<p>Linux controls the on-board LED through the mailbox between the two cores. The program starts blinking at 500 ms. Check in the Duo S schematic for your revision that A29 drives only the LED before running it.</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>Command</th><th>Value</th><th>Reply</th></tr></thead>
+  <tbody>
+    <tr><td><code>0x41</code> LED mode</td><td>0 off, 1 on, 2 blink</td><td>The new mode</td></tr>
+    <tr><td><code>0x42</code> blink period</td><td>50–5000 (ms per half period)</td><td>The new period</td></tr>
+    <tr><td>Anything else</td><td></td><td>Refused (<code>BL_CMD_ERROR</code>)</td></tr>
+  </tbody>
+</table></div>
+<pre><code><span class="p">$ </span>cd examples/platformio/beitlabduino_mailbox &amp;&amp; pio run -t upload
+<span class="p">$ </span>./bl_send.sh 0x41 1       <span class="c"># from the PC: LED on, prints 1</span>
+<span class="p">$ </span>./bl_send.sh 0x42 100     <span class="c"># fast blink, prints 100</span>
+<span class="p">$ </span>./bl_send.sh 0x41 2       <span class="c"># back to blinking</span></code></pre>
+<p>The mailbox is hardware inside the chip, so only Linux on the Duo S can reach it. <code>bl_send</code> always runs on the board: <code>bl_send.sh</code> opens an SSH session and runs it there, or you can log in and type <code>bl_send 0x41 1</code> directly, which is faster for scripts. It prints the reply value and its exit code says what happened. Image 0.4.1 includes <code>bl_send</code>.</p>
+
+<h3 id="bmi160"><code>beitlabduino_bmi160_j3</code></h3>
+<p>A BMI160 accelerometer and gyro wired to the 3.3 V J3 header: <strong>J3-3 (B20) is SCL and J3-5 (B21) is SDA</strong>. It uses the <code>duos_bare_bmi160_j3</code> profile and <code>custom_libs = beitlabduino duos_i2c4 beitlabduino_bmi160</code>. The driver probes address <code>0x68</code> then <code>0x69</code> read-only and configures only a chip that answers with ID <code>0xD1</code>. It runs at 100 Hz and prints at 10 Hz:</p>
+<pre><code>bmi160 a_mg=12,-8,1002 g_mdps=30,-12,5 temp_mC=24500</code></pre>
+<p>Units are milli-g, milli-degrees per second and milli-degrees Celsius, all integers.</p>
+
+<h2 id="carrier">Robotics Board</h2>
+<p>These use the carrier profiles. Power through the carrier, lock and unlock as in <a href="sdk.html#carrier">the carrier note</a>, and keep the E-stop open while you run them. They do not compile the balance controller or any motor driver.</p>
+
+<h3 id="robotics-board"><code>robotics_board</code></h3>
+<p>Prints the selected profile and the reservations the carrier places on the motor enable pad B19, the knee servo pad A18 and I²C4, then blinks the on-board LED A29 at 1 Hz. The reservation checks only read policy: the example never initializes or writes a carrier pad. Built with another profile, it stays idle.</p>
+<pre><code><span class="p">$ </span>cd examples/platformio/robotics_board &amp;&amp; pio run -t upload &amp;&amp; pio run -t rtmonitor
+robotics board profile beitlab_robotics_rev011
+B19 protected: MOT_EN_REQ motor enable request; reserved for robot firmware
+A18 protected: ...
+I2C4 reserved: robot IMU/ADC/accessory bus
+robotics board heartbeat on A29</code></pre>
+
+<h3 id="robotics-imu"><code>robotics_imu</code></h3>
+<p>Reads the carrier's Bosch BMI323 (I²C4, address <code>0x68</code>) by polling and prints acceleration, angular rate and temperature. It is plain C and uses the <code>beitlab_robotics_rev011_imu</code> profile, which grants only that one address through a checked driver (<code>custom_libs = carrier_imu</code>). No GPIO output, SPI, PWM or LED is used. Output is also visible on J22 at 115200 8N1 with <code>RT:</code> prefixes.</p>
+
+<h3 id="bl-imu"><code>beitlabduino_imu</code></h3>
+<p>The same sensor through beitlabduino typed samples, at 10 Hz. <code>custom_libs = beitlabduino carrier_imu beitlabduino_imu</code> with the same IMU profile:</p>
+<pre><code>#include "beitlabduino.h"
+#include "beitlabduino_imu.h"
+
+void loop(void)
+{
+	bl_imu_sample_t s;
+
+	if (bl_imu_read(&amp;s) == BL_IMU_SAMPLE_READY)
+		bl_print("imu a_mg=%d,%d,%d g_mdps=%d,%d,%d temp_mC=%d",
+			 (int)s.accel_mg[0], (int)s.accel_mg[1], (int)s.accel_mg[2],
+			 (int)s.gyro_mdps[0], (int)s.gyro_mdps[1], (int)s.gyro_mdps[2],
+			 (int)s.temperature_mc);
+	bl_delay(100);
+}</code></pre>
+<p>The full example calls <code>bl_imu_begin()</code> in <code>setup()</code> and retries if the sensor does not answer. With the board flat, about +1000 mg appears on the axis pointing up. Physical readings are still pending hardware qualification.</p>
+
+<h2 id="limits">Things to know before you write code</h2>
+<ul>
+  <li><strong>Printing uses a small formatter.</strong> <code>bl_print</code> and <code>pg_print</code> understand only <code>%d %x %s %c %p</code> and the <code>l</code> modifier. <code>%u</code>, <code>%f</code> and widths such as <code>%02x</code> are not supported, and <code>%u</code> can crash the C906. Use <code>%d</code> for values below 2<sup>31</sup>.</li>
+  <li><strong>Only checked pins.</strong> <code>bl_pin_mode()</code> returns -1 and leaves the registers untouched when the profile refuses a pad.</li>
+  <li><strong>Interrupts and shared GPIO ports.</strong> The A53 and the C906 share GPIO port registers; the FreeRTOS critical sections cannot synchronise with Linux. Hardware verification is still required for anything that toggles pins quickly.</li>
+  <li><strong>The 5 ms tick.</strong> <code>bl_delay()</code> rounds up to whole 5 ms ticks.</li>
+</ul>
+<p>Ready to build your own? Continue to <a href="write-your-own.html">Write your own code</a>.</p>
