@@ -7,30 +7,76 @@
     {
       "title": "Start here",
       "items": [
-        {"page": "docs/index.html", "label": "Documentation home"},
-        {"page": "docs/getting-started.html", "label": "First steps: connect to your PC"}
+        {
+          "page": "docs/index.html",
+          "label": "Documentation home"
+        },
+        {
+          "page": "docs/getting-started.html",
+          "label": "First steps: connect to your PC"
+        },
+        {
+          "page": "docs/for-agents.html",
+          "label": "For AI agents and crawlers"
+        }
       ]
     },
     {
       "title": "Robotics Board",
       "items": [
-        {"page": "docs/board/index.html", "label": "Board overview"},
-        {"page": "docs/board/bring-up.html", "label": "First power-on and bring-up"}
+        {
+          "page": "docs/board/index.html",
+          "label": "Board overview"
+        },
+        {
+          "page": "docs/board/bring-up.html",
+          "label": "First power-on and bring-up"
+        }
       ]
     },
     {
       "title": "Development SDK",
       "items": [
-        {"page": "docs/board/sdk.html", "label": "Get the SDK and flash it"},
-        {"page": "docs/board/examples.html", "label": "Examples and platforms"},
-        {"page": "docs/board/write-your-own.html", "label": "Write your own code"}
+        {
+          "page": "docs/board/sdk.html",
+          "label": "Get the SDK and flash it"
+        },
+        {
+          "page": "docs/board/examples.html",
+          "label": "Examples and platforms"
+        },
+        {
+          "page": "docs/board/write-your-own.html",
+          "label": "Write your own code"
+        }
       ]
     },
     {
       "title": "Balance Robot v1",
       "items": [
-        {"page": "docs/robot/index.html", "label": "Robot overview"}
+        {
+          "page": "docs/robot/index.html",
+          "label": "Robot overview"
+        }
       ]
     }
-  ]
+  ],
+  "agents": {
+    "summary": "Beitlab Robotics builds Balance Robot v1, a wheeled biped, and the Robotics Board v0.11, a carrier for the Milk-V Duo S (SG2000: Cortex-A53 Linux + C906 real-time core). It also shares an open SDK, duo-s-playground, so makers can flash the Duo S with Wi-Fi preconfigured and write C906 programs in plain C (FreeRTOS) or in the Arduino-style beitlabduino library.",
+    "notes": [
+      "Every page below is available as Markdown at the same address with .md instead of .html. llms-full.txt contains all of them in one file. CAD, schematics, the hardware list and the engineering book are not published. Balance Robot v1 and the board are prototypes: values come from design files unless a page says it was measured."
+    ],
+    "links": [
+      {
+        "label": "duo-s-playground SDK repository",
+        "url": "https://github.com/beitlab-inc/beitlab-os-milkv-duo-sdk",
+        "description": "Source of the flashable Duo S image, the PlatformIO platform, beitlabduino and the examples."
+      },
+      {
+        "label": "Beitlab on LinkedIn",
+        "url": "https://www.linkedin.com/company/beitlab",
+        "description": "The only contact channel for product questions."
+      }
+    ]
+  }
 }

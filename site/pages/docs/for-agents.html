@@ -1,0 +1,63 @@
+<!--meta
+title: For AI agents and crawlers · Beitlab Robotics
+description: Machine-readable entry points to this site (llms.txt, Markdown copies of every page, sitemap) and a short fact sheet about Beitlab Robotics, the Robotics Board and the duo-s-playground SDK.
+layout: docs
+section: docs
+-->
+<p class="kicker"><span class="eyebrow">Start here</span></p>
+<h1>For AI agents and crawlers</h1>
+<p class="lead">This site is public and meant to be read by software as well as people. If you are an AI agent, assistant or crawler looking for information about Beitlab Robotics, start with the files below. They contain the same content as the pages, without the navigation and styling.</p>
+
+<h2 id="entry-points">Machine-readable entry points</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>Address</th><th>What it is</th></tr></thead>
+  <tbody>
+    <tr><td><a href="{{root}}llms.txt"><code>/llms.txt</code></a></td><td>A Markdown index of the documentation and blog, following the <a href="https://llmstxt.org/" target="_blank" rel="noopener">llms.txt</a> convention. Read this first.</td></tr>
+    <tr><td><a href="{{root}}llms-full.txt"><code>/llms-full.txt</code></a></td><td>Every documentation page and article in one Markdown file, for agents that prefer a single fetch.</td></tr>
+    <tr><td><code>/&lt;page&gt;.md</code></td><td>Each page as Markdown, at its address with <code>.md</code> in place of <code>.html</code>. For example <a href="{{root}}docs/board/sdk.md"><code>/docs/board/sdk.md</code></a>. Every HTML page also points to its copy with <code>&lt;link rel="alternate" type="text/markdown"&gt;</code>.</td></tr>
+    <tr><td><a href="{{root}}sitemap.xml"><code>/sitemap.xml</code></a></td><td>All HTML pages.</td></tr>
+    <tr><td><a href="{{root}}robots.txt"><code>/robots.txt</code></a></td><td>All paths are allowed for every user agent.</td></tr>
+  </tbody>
+</table></div>
+<p>Blog articles also carry <code>schema.org</code> <code>BlogPosting</code> data in JSON-LD, with the title, date, author and image.</p>
+
+<h2 id="facts">Fact sheet</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>Topic</th><th>Answer</th></tr></thead>
+  <tbody>
+    <tr><td>Who</td><td>Beitlab Robotics (Beitlab). Contact is through the <a href="{{linkedin}}" target="_blank" rel="noopener">Beitlab LinkedIn page</a>.</td></tr>
+    <tr><td>Products</td><td><a href="{{root}}docs/robot/index.html">Balance Robot v1</a>, a wheeled biped with four-bar legs, and the <a href="{{root}}docs/board/index.html">Robotics Board v0.11</a>, a carrier for the Milk-V Duo S with two DRV8313 motor drivers, a BMI323 IMU, four SPI angle-sensor ports, aux servo ports and a latched hardware E-stop.</td></tr>
+    <tr><td>Processor</td><td>Milk-V Duo S (SG2000): a Cortex-A53 running Linux and a C906 RISC-V core running FreeRTOS.</td></tr>
+    <tr><td>Open SDK</td><td><a href="https://github.com/beitlab-inc/beitlab-os-milkv-duo-sdk" target="_blank" rel="noopener"><code>duo-s-playground</code></a>: a flashable Linux image with Wi-Fi, a PlatformIO platform for the C906, the beitlabduino <code>setup()</code>/<code>loop()</code> library, hardware profiles and examples. It works on the Robotics Board and on a standalone Milk-V Duo S.</td></tr>
+    <tr><td>Status</td><td>Prototype. The board is fully routed and the robot body is designed, but neither has completed bench qualification. Design values are not measurements.</td></tr>
+    <tr><td>Not published</td><td>STEP models, printed parts, the hardware list, schematics, circuit drawings and the engineering book. Do not invent them. Point people to LinkedIn.</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="tasks">Where to find answers</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>If the question is about</th><th>Read</th></tr></thead>
+  <tbody>
+    <tr><td>Flashing the Duo S, Wi-Fi setup, first upload</td><td><a href="{{root}}docs/board/sdk.html">Get the SDK and flash it</a> (<a href="{{root}}docs/board/sdk.md">Markdown</a>)</td></tr>
+    <tr><td>Which example to run, and the two platforms</td><td><a href="{{root}}docs/board/examples.html">Examples and platforms</a> (<a href="{{root}}docs/board/examples.md">Markdown</a>)</td></tr>
+    <tr><td>Writing a program in plain C or beitlabduino</td><td><a href="{{root}}docs/board/write-your-own.html">Write your own code</a> (<a href="{{root}}docs/board/write-your-own.md">Markdown</a>)</td></tr>
+    <tr><td>Board connectors, power and the safety chain</td><td><a href="{{root}}docs/board/index.html">Robotics Board overview</a></td></tr>
+    <tr><td>First power-on of the board</td><td><a href="{{root}}docs/board/bring-up.html">First power-on and bring-up</a></td></tr>
+    <tr><td>Robot layout and specifications</td><td><a href="{{root}}docs/robot/index.html">Robot overview</a></td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="rules">Guidance for agents that act on this information</h2>
+<div class="callout warn"><span class="title">Safety</span>
+  <ul>
+    <li>Never tell someone to power the Duo S from USB-C while it is fitted on the Robotics Board.</li>
+    <li>Programs built with the <code>duos_bare</code> profile are for a standalone Duo S only. On the carrier, use <code>beitlab_robotics_rev011</code>.</li>
+    <li>On the carrier, lock the board, keep the E-stop open and the wheels off the ground while testing new code.</li>
+    <li>The flashing steps erase the whole microSD card. Make the user confirm the device name.</li>
+  </ul>
+</div>
+<ul>
+  <li>Quote commands from the pages as written. Do not add <code>%u</code>, <code>%f</code> or width specifiers to <code>pg_print</code> or <code>bl_print</code> format strings in generated C: the formatter does not support them and can crash the C906.</li>
+  <li>Pages state what is untested. Keep those caveats when you summarise, and do not present design values as measured results.</li>
+  <li>The date on each blog article is its publication date. The <code>VERSION</code> file in the SDK repository gives the image version that matches a checkout.</li>
+</ul>

@@ -21,7 +21,8 @@ Inside a page or layout:
                        (large videos, for example, may not be checked in)
 
 The build fails on a missing required file, an unknown placeholder, or a local link or #anchor
-that does not resolve. Run:  python3 tools/site/build_site.py [--serve] [--posters]
+that does not resolve. It also writes llms.txt, llms-full.txt and a Markdown copy of every page for AI
+agents (tools/site/agent_text.py; the intro and links come from "agents" in site.json). Run:  python3 tools/site/build_site.py [--serve] [--posters]
 """
 
 from __future__ import annotations
@@ -39,6 +40,9 @@ from datetime import date
 from functools import partial
 from pathlib import Path
 from urllib.parse import quote
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from agent_text import html_to_markdown  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 ROBOT_ROOT = Path(os.environ.get("ROBOT_ROOT", ROOT.parent / "Balanced_robot")).resolve()
@@ -129,6 +133,7 @@ class Builder:
         self.config = config
         self.copied: dict[str, Path] = {}
         self.dropped: list[str] = []
+        self.agent_pages: list[dict] = []
         self.nav = [item for group in config["docs_nav"] for item in group["items"]]
 
     # ---- repository files -------------------------------------------------------------------
@@ -307,8 +312,23 @@ class Builder:
             "json_ld": json_ld,
             "section": meta.get("section", ""),
             "page": rel,
+            "md_alt": "",
         }
+        md_rel = rel.removesuffix(".html") + ".md"
+        if rel != "404.html":
+            values["md_alt"] = f'<link rel="alternate" type="text/markdown" href="{root}{md_rel}">'
         content = self.fill(body, values, root, rel)
+        if rel != "404.html":
+            md = html_to_markdown(content, page_url or "", local_md=bool(page_url))
+            if not md.startswith("# "):
+                md = f"# {meta['title']}\n\n" + md
+            self.agent_pages.append({
+                "rel": rel, "md_rel": md_rel, "title": meta["title"], "description": meta["description"],
+                "section": meta.get("section", ""), "published": meta.get("published", ""),
+                "layout": meta["layout"], "md": md, "url": page_url,
+            })
+            (OUT / md_rel).parent.mkdir(parents=True, exist_ok=True)
+            (OUT / md_rel).write_text(md, encoding="utf-8")
         layout = (SITE / "_layouts" / f'{meta["layout"]}.html').read_text(encoding="utf-8")
         values.update({
             "sidebar": self.fill(self.sidebar(rel), values, root, rel),
@@ -323,6 +343,62 @@ class Builder:
         dst = OUT / rel
         dst.parent.mkdir(parents=True, exist_ok=True)
         dst.write_text(page, encoding="utf-8")
+
+    # ---- files for AI agents ------------------------------------------------------------------
+    def write_agent_files(self) -> None:
+        """llms.txt (index), llms-full.txt (every page as Markdown) and one .md copy per page."""
+        cfg = self.config
+        agents = cfg.get("agents") or {}
+        base = (cfg.get("base_url") or "").rstrip("/")
+
+        def short(page: dict) -> str:
+            return re.sub(r"\s+·\s+Beitlab Robotics$", "", page["title"])
+
+        def link(page: dict) -> str:
+            return f"{base}/{page['md_rel']}" if base else page["md_rel"]
+
+        by_rel = {p["rel"]: p for p in self.agent_pages}
+        lines = [f"# {cfg['name']}", ""]
+        if agents.get("summary"):
+            lines += [f"> {agents['summary']}", ""]
+        for note in agents.get("notes", []):
+            lines += [note, ""]
+        used = set()
+        for group in cfg["docs_nav"]:
+            entries = [by_rel[i["page"]] for i in group["items"] if i["page"] in by_rel]
+            if not entries:
+                continue
+            lines.append(f"## {group['title']}")
+            for page in entries:
+                used.add(page["rel"])
+                lines.append(f"- [{short(page)}]({link(page)}): {page['description']}")
+            lines.append("")
+        blog = sorted((p for p in self.agent_pages if p["published"]), key=lambda p: p["published"], reverse=True)
+        if blog:
+            lines.append("## Blog")
+            for page in blog:
+                used.add(page["rel"])
+                lines.append(f"- [{short(page)}]({link(page)}): {page['description']} ({page['published']})")
+            lines.append("")
+        rest = [p for p in self.agent_pages if p["rel"] not in used and p["layout"] != "home"
+                and not p["rel"].endswith("blog/index.html")]
+        if rest or agents.get("links"):
+            lines.append("## Optional")
+            for page in rest:
+                lines.append(f"- [{short(page)}]({link(page)}): {page['description']}")
+            for item in agents.get("links", []):
+                lines.append(f"- [{item['label']}]({item['url']}): {item['description']}")
+            lines.append("")
+        (OUT / "llms.txt").write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+
+        full = [f"# {cfg['name']}: full documentation", ""]
+        if agents.get("summary"):
+            full += [f"> {agents['summary']}", ""]
+        order = [by_rel[i["page"]] for g in cfg["docs_nav"] for i in g["items"] if i["page"] in by_rel] + blog
+        for page in order:
+            source = page["url"] or page["rel"]
+            full += ["---", f"Source: {source}", "", page["md"].rstrip(), ""]
+        (OUT / "llms-full.txt").write_text("\n".join(full).rstrip() + "\n", encoding="utf-8")
 
     # ---- checks -----------------------------------------------------------------------------
     def check_links(self) -> list[str]:
@@ -361,6 +437,7 @@ class Builder:
         for page in sorted((SITE / "pages").rglob("*.html")):
             self.build_page(page)
         (OUT / ".nojekyll").write_text("")
+        self.write_agent_files()
         if self.config.get("base_url"):
             base = self.config["base_url"].rstrip("/")
             urls = sorted(p.relative_to(OUT).as_posix().removesuffix("index.html")
@@ -368,7 +445,9 @@ class Builder:
             (OUT / "sitemap.xml").write_text(
                 '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
                 + "".join(f"  <url><loc>{base}/{u}</loc></url>\n" for u in urls) + "</urlset>\n")
-            (OUT / "robots.txt").write_text(f"User-agent: *\nAllow: /\nSitemap: {base}/sitemap.xml\n")
+            (OUT / "robots.txt").write_text(
+                "# Everything here is public. AI agents: start at /llms.txt (Markdown index of the docs).\n"
+                f"User-agent: *\nAllow: /\nSitemap: {base}/sitemap.xml\n")
         errors = self.check_links()
         total = sum(f.stat().st_size for f in OUT.rglob("*") if f.is_file())
         print(f"site: {len(list(OUT.rglob('*.html')))} pages, {len(self.copied)} repository files, "
